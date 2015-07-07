@@ -1,0 +1,2818 @@
+* Daten 
+** Morphologie/Roentgen
+  CLOCK: [2014-02-02 So 15:00]--[2014-02-02 So 20:00] =>  5:00
+Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängig von der Gruppe vor der Bearbeitung 1.Messung (n=69) und vor der Bearbeitung 6. Messung die deskriptive Statistik und die Korrelation aller Parameter innerhalb der Tabellen  (zwischen den Tabellen nur von ausgewählten Parametern, die ich dir dann sage) (ohne die beiden Messungen untereinander zu korrelieren).
+#+BEGIN_SRC R :session
+  require(XLConnect)
+  wb <- loadWorkbook("morph.xlsx")
+  morph <- readWorksheet(wb,1)
+
+  morph <- morph[!is.na(morph$Gruppe),]
+
+  morph$Gruppe <- factor(morph$Gruppe)
+  morph$Bearbeitung <- factor(morph$Bearbeitung)
+  morph$Huf <- factor(morph$Huf)
+  morph$Tier <- factor(morph$Tier)
+
+  names(morph) <- gsub("\\.+","\\.",names(morph),perl = T)
+  names(morph) <- gsub("\\.+$","",names(morph),perl = T)
+  names(morph) <- gsub("^X(\\d)\\.(.+)$","\\2_\\1",names(morph),perl = T)
+
+  # save(morph,file="20140215morph.rdata")
+
+  ## nur erste
+  fm <- morph[morph$Bearbeitung=="vor",grep("Gruppe|Tier|Huf|Bearbeitung|_1",names(morph))]
+
+  fm$HL_1[which.max(fm$HL_1)] <- 15.2
+
+  save(fm,file="201402morph.rdata")
+
+  mg <- gsub("_1","",names(fm)[-(1:4)])
+
+  panel.cor <- function(x, y, digits=2, prefix="", cex.cor, ...)
+  {
+      usr <- par("usr"); on.exit(par(usr))
+      par(usr = c(0, 1, 0, 1))
+      r <- abs(cor(x, y,use="pairwise.complete.obs"))
+      txt <- format(c(r, 0.123456789), digits=digits)[1]
+      txt <- paste(prefix, txt, sep="")
+      if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+      text(0.5, 0.5, txt, cex = cex.cor * r)
+  }
+
+
+  panel.cor <- function(x, y, digits=2, prefix="", cex.cor, ...)
+  {
+      usr <- par("usr"); on.exit(par(usr))
+      par(usr = c(0, 1, 0, 1))
+      r <- cor.test(x,y)$p.val
+      txt <- format(c(r, 0.123456789), digits=digits)[1]
+      txt <- paste(prefix, txt, sep="")
+      if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+      text(0.5, 0.5, txt, cex = cex.cor )
+  }
+
+  require(lattice)
+
+  pdf("splom_morph_both.pdf",width = 15, height = 15)
+  pairs(~ . , data=fm[,-(1:4)],
+        lower.panel=panel.smooth, upper.panel=panel.cor, 
+        pch=20, col=as.numeric(fm$Huf),main="Morph Scatterplot Matrix")
+  dev.off()
+
+  pdf("splom_morph_links.pdf",width = 15, height = 15)
+  pairs(~ . , data=fm[fm$Huf=="links",-(1:4)],
+        lower.panel=panel.smooth, upper.panel=panel.cor, 
+        pch=20, main="Morph links Scatterplot Matrix")
+  dev.off()
+
+  pdf("splom_morph_rechts.pdf",width = 15, height = 15)
+  pairs(~ . , data=fm[fm$Huf=="rechts",-(1:4)],
+        lower.panel=panel.smooth, upper.panel=panel.cor, 
+        pch=20, main="Morph rechts Scatterplot Matrix")
+  dev.off()
+
+
+  savePlot("splom_morph.png")
+  nrow(fm)
+
+  wb2 <- loadWorkbook("xray.xlsx")
+  xray <- readWorksheet(wb2,1)
+
+  xray <- xray[!is.na(xray$Tier),]
+
+  xray$Gruppe <- factor(xray$Gruppe)
+  xray$Bearbeitung <- factor(xray$Bearbeitung)
+  xray$Huf <- factor(xray$Huf)
+  xray$Tier <- factor(xray$Tier)
+
+  names(xray) <- gsub("\\.","",names(xray))
+  names(xray) <- gsub("^X","",names(xray))
+
+  x <- xray[,-grep("^MF",names(xray))]
+  x <- x[,1:15]
+
+  x <- x[x$Bearbeitung=="vor",]
+
+  pdf("splom_xray.pdf",width = 15, height = 15)
+  pairs(~ . , data=x[,-(1:4)],
+        lower.panel=panel.smooth, upper.panel=panel.cor, 
+        pch=20, main="X-ray Scatterplot Matrix")
+  dev.off()
+#+END_SRC
+
+** druck
+#+BEGIN_SRC R :session
+  require(XLConnect)
+  wb <- loadWorkbook("druckstand.xlsx")
+  x <- readWorksheet(wb,1)
+  
+  x <- x[x$Gruppe!="Gruppe",]
+  
+  for(i in 8:ncol(x)){
+      x[,i] <- as.numeric(gsub(",",".",x[,i]))
+  }
+  
+  names(x) <- gsub("\\.+$","",names(x))
+  names(x) <- gsub("\\.+","\\.",names(x))
+  names(x) <- gsub("ä","ae",names(x))
+  
+  names(x)[8:ncol(x)] <- gsub("^X([1-6])\\.(.+)","\\2_\\1",names(x)[8:ncol(x)])
+  
+  x$Huf.S <- gsub(" ","",x$Huf.S)
+  # save(x,file="20140209druckstand.rdata")
+  
+  require(XLConnect)
+  wb <- loadWorkbook("druckschritt2.xlsx")
+  x <- readWorksheet(wb,1)
+  
+  names(x) <- gsub("\\.+$","",names(x))
+  names(x) <- gsub("\\.+","\\.",names(x))
+  names(x) <- gsub("ä","ae",names(x))
+  names(x) <- gsub("ß","ss",names(x))
+  
+  names(x)[8:ncol(x)] <- gsub("^X([1-6])\\.(.+)","\\2_\\1",names(x)[8:ncol(x)])
+  
+  x$Huf.S <- gsub(" ","",x$Huf.S)
+  
+  # save(x,file="20140209druckschritt.rdata")
+#+END_SRC
+*** data cleaning
+* correlationen morphology
+#+BEGIN_SRC R :session
+  td <- as.character(as.matrix(read.delim("clipboard",header=F)))
+  td <- as.data.frame(matrix(td,ncol=2,byrow = T))
+  td$V1 <- gsub(" ","",td$V1)
+  td$V2 <- gsub(" ","",td$V2)
+  
+  #save(td,file="201402morphpairs.rdata")
+  
+  load("201402morphpairs.rdata")
+  load("201402morph.rdata")
+  
+  cts <- list()
+  cts2 <- list()
+  lms <- list()
+  lms.r <- list()
+  lms.l <- list()
+  lms.both <- list()
+  
+  
+  for(i in 1:nrow(td)){
+      var1 <- paste0(td$V1[i],"_1")
+      var2 <- paste0(td$V2[i],"_1")
+      cts[[i]] <- cor.test(fm[,var1],fm[,var2])
+      cts2[[i]] <- cor.test(fm[,var1],fm[,var2],method="s")
+      
+      lms[[i]] <- lm(fm[,var1]~fm[,var2])
+      lms.l[[i]] <- lm(fm[fm$Huf=="links",var1]~fm[fm$Huf=="links",var2])
+      lms.r[[i]] <- lm(fm[fm$Huf=="rechts",var1]~fm[fm$Huf=="rechts",var2])
+      lms.both[[i]] <- lm(fm[,var1]~fm[,var2] + factor(fm[,"Huf"]))
+  }
+  
+  td$cor <- sapply(cts,function(x) x$estimate)
+  td$corsquared <- sapply(cts,function(x) x$estimate**2)
+  td$cor.pval <- sapply(cts,function(x) x$p.value)
+  
+  td$cor <- sapply(cts2,function(x) x$estimate)
+  td$cor.pval <- sapply(cts2,function(x) x$p.value)
+  
+  td$lmrsquared <- sapply(lms,function(x) summary(x)$r.squared)
+  td$lmcoef2 <- sapply(lms,function(x) summary(x)$coefficients[2,1])
+  td$lmcoef2.pval <- sapply(lms,function(x) summary(x)$coefficients[2,4])
+  
+  td$lmlcoef2 <- sapply(lms.l,function(x) summary(x)$coefficients[2,1])
+  td$lmlcoef2.pval <- sapply(lms.l,function(x) summary(x)$coefficients[2,4])
+  
+  td$lmrcoef2 <- sapply(lms.r,function(x) summary(x)$coefficients[2,1])
+  td$lmrcoef2.pval <- sapply(lms.r,function(x) summary(x)$coefficients[2,4])
+  
+  td$lmhuf <- sapply(lms.both,function(x) summary(x)$coefficients[3,1])
+  td$lmhuf.pval <- sapply(lms.both,function(x) summary(x)$coefficients[3,4])
+  
+  #save(td,file="201402cormorph.rdata")
+#+END_SRC
+* Korrelationen Roentgen
+#+BEGIN_SRC R :session
+  require(XLConnect)
+  wb2 <- loadWorkbook("xray.xlsx")
+  xray <- readWorksheet(wb2,1)
+  
+  xray <- xray[!is.na(xray$Tier),]
+  
+  xray$Gruppe <- factor(xray$Gruppe)
+  xray$Bearbeitung <- factor(xray$Bearbeitung)
+  xray$Huf <- factor(xray$Huf)
+  xray$Tier <- factor(xray$Tier)
+  xray <- xray[,-grep("^MF",names(xray))]
+  
+  names(xray) <- gsub("\\.$","",names(xray))
+  names(xray) <- gsub("\\.([1-6])$","_\\1",names(xray))
+  names(xray) <- gsub("\\.+","\\.",names(xray))
+  
+  names(xray) <- gsub("^X\\.?","",names(xray))
+  names(xray) <- gsub("\\._","_",names(xray))
+  ## save(xray,file="20140215xray.rdata")
+  
+  ## x <- xray[,-grep("^MF",names(xray))]
+  
+  x <- xray[,1:15]
+  
+  x <- x[x$Bearbeitung=="vor",]
+  
+  names(x) <- gsub("1$","",names(x))
+  
+  kors <- as.character(as.matrix(read.delim("clipboard",header=F)))
+  kors <- as.data.frame(matrix(kors,ncol=2,byrow = T))
+  kors$V1 <- gsub("[^0-9a-zA-Z]","",kors$V1)
+  kors$V2 <- gsub("[^0-9a-zA-Z]","",kors$V2)
+  kors$V1 <- gsub("ort","",kors$V1)
+  kors$V2 <- gsub("ort","",kors$V2)
+  kors$V1 <- gsub("DIPS","DIP",kors$V1)
+  kors$V2 <- gsub("DIPS","DIP",kors$V2)
+  
+  
+  cts <- list()
+  
+  for(i in 1:nrow(kors)){
+      var1 <- kors$V1[i]
+      var2 <- kors$V2[i]
+      cts[[i]] <- cor.test(x[,var1],x[,var2])
+  }
+  
+  kors$cor <- sapply(cts,function(x) x$estimate)
+  kors$cor.pval <- sapply(cts,function(x) x$p.value)
+  
+  ## save(kors,x,file = "201402corxray.rdata")
+  
+  ## roentgen und morphologie
+  rm <- merge(x,fm)
+  ## save(rm,x,file = "201402corxraymorph.rdata")
+  names(rm) <- gsub("_1","",names(rm))
+  kors <- read.delim("clipboard",header=F)
+  kors$V1 <- gsub("[^0-9a-zA-Z]","",kors$V1)
+  kors$V2 <- gsub("[^0-9a-zA-Z]","",kors$V2)
+  kors$V1 <- gsub("ort","",kors$V1)
+  kors$V2 <- gsub("ort","",kors$V2)
+  kors$V1 <- gsub("DIPS","DIP",kors$V1)
+  kors$V2 <- gsub("DIPS","DIP",kors$V2)
+  
+  cts <- list()
+  
+  for(i in 1:nrow(kors)){
+      var1 <- kors$V1[i]
+      var2 <- kors$V2[i]
+      cts[[i]] <- cor.test(rm[,var1],rm[,var2])
+  }
+  
+  kors$cor <- sapply(cts,function(x) x$estimate)
+  kors$cor.pval <- sapply(cts,function(x) x$p.value)
+  
+  #save(kors,x,file = "201402corxraymorph.rdata")
+  
+  load("201402corxraymorph.rdata")
+  
+  res <- list()
+  res[[1]] <- td
+  load("201402corxray.rdata")
+  res[[2]] <- kors
+  res[[3]] <- kors
+  res <- Reduce(rbind,res)
+  
+  # save(res,file="201402cor1.rdata")
+  
+  require(XLConnect)
+  wb <- loadWorkbook("201402korrmorphroentgen.xlsx",create = T)
+  createSheet(wb,name = "korrs")
+  writeWorksheet(wb,res,sheet = "korrs")
+  saveWorkbook(wb)
+  
+  ## save(xray,file="20140306xray.rdata") 
+#+END_SRC
+
+* Korrelationen Druck Stand
+#+BEGIN_SRC R :session
+  load("20140209druckstand.rdata")
+  
+  names(x)[18] <- "Kraft.Zehe_1"
+  names(x) <- tolower(names(x))
+  
+  #kors <- as.character(as.matrix(read.delim("clipboard",header=F,encoding="latin1")))
+  kors <- read.delim("clipboard",header=F,encoding="latin1")
+  #kors <- gsub("ä","ae",kors)
+  #kors <- tolower(kors)
+  #kors <- gsub("[ -]","\\.",kors)
+  #kors[grep("flaeche|kraft",kors,ignore.case = T)] <- gsub("(^[a-z]+)\\.([a-z]+)$","\\2\\.\\1",kors[grep("flaeche|kraft",kors,ignore.case = T)])
+  #kors <- as.data.frame(matrix(kors,ncol=2))
+  
+  res <- list()
+  hufs <- list()
+  
+  require(ggplot2)
+  for(j in c(1,6)){
+      tmp.df <- x[x$bearbeitung=="vor",c(1:7,grep(paste0("_",j,"$"),names(x)))]
+      names(tmp.df) <- gsub(paste0("_",j,"$"),"",names(tmp.df))
+      cts <- list()
+      
+      for(i in 1:nrow(kors)){
+          var1 <- as.character(kors$V1[i])
+          var2 <- as.character(kors$V2[i])
+          if(grepl("gm\\.s|huf\\.s",var1) | grepl("gm\\.s|huf\\.s",var2) ) {
+              cts[[i]] <- NA
+              print(i)
+  #            hufs[[length(hufs)+1]] <- list(var1=var1,var2=var2,rm=lm(tmp.df[,var1]~tmp.df[,var2]))
+              hufs[[length(hufs)+1]] <- ggplot(tmp.df,aes_string(x=var2,y=var1)) + geom_boxplot(notch=T) + ggtitle(paste(var1,"~",var2,"ZP:",j)) + theme_bw()
+              next
+          }
+          if(j==1 & (grepl("flaeche.zehe",var1)|grepl("flaeche.zehe",var2))) {
+                          cts[[i]] <- NA
+                          print(i)
+                          next
+                      }
+          if(j==1 & (grepl("flaeche.seiten",var1)|grepl("flaeche.seiten",var2))) {
+              cts[[i]] <- NA
+              print(i)
+              next
+          }
+          if(j==1 & (grepl("flaeche.trachten",var1)|grepl("flaeche.trachten",var2))) {
+              cts[[i]] <- NA
+              print(i)
+              next
+          }
+          cts[[i]] <- cor.test(tmp.df[,var1],tmp.df[,var2],method="spearman")
+          print(i)
+      }
+  
+      kors$cor <- sapply(cts,function(x) {
+          if(is.na(x)){
+              return(NA)
+          }
+          x$estimate})
+      kors$cor.pval <- sapply(cts,function(x) { if(is.na(x)) {return(NA)}; x$p.value})
+      kors$zp <- j
+      res[[j]] <- kors
+  }
+  
+  result <-  Reduce(rbind,res)
+  ## save(kors,result,file = "201402druckstand.rdata")
+  
+  #require(XLConnect)
+  #wb <- loadWorkbook("201402Druckkorrs.xlsx",create=T)
+  #createSheet(wb,name="stand")
+  #writeWorksheet(wb,result,sheet = "stand")
+  
+  require(gridExtra)
+  ml = do.call(marrangeGrob, c(hufs, list(nrow=2, ncol=2)))
+  ggsave("20140307varandruckstand.pdf", ml)
+#+END_SRC
+
+  - "flaeche.zehe" bei druck stand und schritt zeitpunkt 1 nicht vorhanden
+  - das gleiche bei "flaeche.seiten"
+* korrel. druckmessung schritt
+#+BEGIN_SRC R :session
+  load("20140209druckschritt.rdata")
+  
+  x$GM.S2 <- gsub("[0-9 ]","",x$GM.S)
+  
+  names(x) <- tolower(names(x))
+  names(x)[17] <- "kraft.zehe_1"
+  names(x)[16] <- "lage.cof.ap.proz_1"
+  names(x)[48] <- "lage.cof.ap.proz_6"
+  
+  kors <- as.character(as.matrix(read.delim("clipboard",header=F,encoding="latin1")))
+  kors <- gsub("ä","ae",kors)
+  kors <- gsub("ß","ss",kors)
+  kors <- tolower(kors)
+  kors <- gsub("[ -]","\\.",kors)
+  kors <- gsub("\\.$","",kors)
+  kors[grep("flaeche|kraft",kors,ignore.case = T)] <- gsub("(^[a-z]+)\\.([a-z]+)$","\\2\\.\\1",kors[grep("flaeche|kraft",kors,ignore.case = T)])
+  kors <- as.data.frame(matrix(kors,ncol=2))
+  
+  res <- list()
+  hufs <- list()
+  for(j in c(1,6)){
+      tmp.df <- x[x$bearbeitung=="vor",c(1:7,grep(paste0("_",j,"$"),names(x)))]
+      names(tmp.df) <- gsub(paste0("_",j,"$"),"",names(tmp.df))
+      cts <- list()
+  
+      for(i in 1:nrow(kors)){
+          var1 <- as.character(kors$V1[i])
+          var2 <- as.character(kors$V2[i])
+          if(grepl("gm\\.s|huf\\.s",var1) | grepl("gm\\.s|huf\\.s",var2) ) {
+              cts[[i]] <- NA
+              hufs[[length(hufs)+1]] <- ggplot(tmp.df,aes_string(x=var2,y=var1)) + geom_boxplot(notch=T) + ggtitle(paste(var1,"~",var2,"ZP:",j)) + theme_bw()
+              next
+          }
+          if(j==1 & (grepl("flaeche.zehe",var1)|grepl("flaeche.zehe",var2))) {
+                          cts[[i]] <- NA
+                          next
+                      }
+          if(j==1 & (grepl("flaeche.seiten",var1)|grepl("flaeche.seiten",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          if(j==1 & (grepl("flaeche.trachten",var1)|grepl("flaeche.trachten",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          cts[[i]] <- cor.test(tmp.df[,var1],tmp.df[,var2],method="spearman")
+      }
+  
+      kors$cor <- sapply(cts,function(x) {
+          if(is.na(x)){
+              return(NA)
+          }
+          x$estimate})
+      kors$cor.pval <- sapply(cts,function(x) { if(is.na(x)) {return(NA)}; x$p.value})
+      kors$zp <- j
+      res[[j]] <- kors
+  }
+  
+  require(gridExtra)
+  ml = do.call(marrangeGrob, c(hufs, list(nrow=2, ncol=2)))
+  ggsave("20140307varandruckschritt.pdf", ml)
+  
+  result <-  Reduce(rbind,res)
+  ##save(kors,result,file = "201402druckschritt.rdata")
+  
+  require(XLConnect)
+  wb <- loadWorkbook("201402Druckkorrs.xlsx")
+  createSheet(wb,name="schritt")
+  writeWorksheet(wb,result,sheet = "schritt")
+  saveWorkbook(wb)
+  
+  
+#+END_SRC
+* korrel. druckmessung stand morph roent
+#+BEGIN_SRC R :session
+  tt <- load("20140215xray.rdata")
+  tt <- load("20140215morph.rdata")
+  
+  names(xray)[grep("HB",names(xray))] <- c("HB.xray_1","HB.xray_6")
+  
+  mx <- merge(xray,morph,all=T)
+  names(mx) <- tolower(names(mx))
+  
+  tt <- load("20140209druckstand.rdata")
+  names(x)[18] <- "Kraft.Zehe_1"
+  names(x) <- tolower(names(x))
+  
+  x <- merge(mx,x)
+  names(x) <- gsub("\\._","_",names(x))
+  # save(x,file="20140215morphxraystand.rdata")
+  
+  kors <- as.character(as.matrix(read.delim("clipboard",header=F,encoding="latin1")))
+  kors <- read.delim("clipboard",header=F)
+  kors <- gsub("ä","ae",kors)
+  kors <- gsub("ß","ss",kors)
+  kors <- tolower(kors)
+  kors <- gsub("dips","dip",kors)
+  kors <- gsub("[ -]","\\.",kors)
+  kors <- gsub("\\.$","",kors)
+  kors <- gsub("support","supp",kors)
+  kors <- gsub("/","\\.",kors)
+  kors[grep("flaeche|kraft",kors,ignore.case = T)] <- gsub("(^[a-z]+)\\.([a-z]+)$","\\2\\.\\1",kors[grep("flaeche|kraft",kors,ignore.case = T)])
+  kors <- as.data.frame(matrix(kors,ncol=2))
+  
+  hufs <- list()
+  res <- list()
+  for(j in c(1,6)){
+      tmp.df <- x[x$bearbeitung=="vor",c(1:7,grep(paste0("_",j,"$|huf.s|gm.s"),names(x)))]
+      names(tmp.df) <- gsub(paste0("_",j,"$"),"",names(tmp.df))
+      cts <- list()
+      
+      for(i in 1:nrow(kors)){
+          var1 <- as.character(kors$V1[i])
+          var2 <- as.character(kors$V2[i])
+          if(grepl("gm\\.s|huf\\.s",var1) | grepl("gm\\.s|huf\\.s",var2) ) {
+              if(grepl("gm\\.s|huf\\.s",var1)){
+                  tmp <- var1
+                  var1 <- var2
+                  var2 <- tmp
+              }
+              cts[[i]] <- NA
+              hufs[[length(hufs)+1]] <- ggplot(tmp.df,aes_string(x=var2,y=var1)) + geom_boxplot(notch=T) + ggtitle(paste(var1,"~",var2,"ZP:",j)) + theme_bw()
+              next
+          }
+          if(j==1 & (grepl("flaeche.zehe",var1)|grepl("flaeche.zehe",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          if(j==1 & (grepl("flaeche.seiten",var1)|grepl("flaeche.seiten",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          if(j==1 & (grepl("flaeche.trachten",var1)|grepl("flaeche.trachten",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          cts[[i]] <- cor.test(tmp.df[,var1],tmp.df[,var2],method="spearman")
+      }
+      
+      kors$cor <- sapply(cts,function(x) {
+          if(is.na(x)){
+              return(NA)
+          }
+          x$estimate})
+      kors$cor.pval <- sapply(cts,function(x) { if(is.na(x)) {return(NA)}; x$p.value})
+      kors$zp <- j
+      res[[j]] <- kors
+  }
+  
+  result <-  Reduce(rbind,res)
+  
+  ml = do.call(marrangeGrob, c(hufs, list(nrow=2, ncol=2)))
+  ggsave("20140307xraystandmorph.pdf", ml)
+  
+  wb <- loadWorkbook("201402Druckkorrs.xlsx")
+  createSheet(wb,name="morpxraystand")
+  writeWorksheet(wb,result,sheet = "morpxraystand")
+  saveWorkbook(wb)
+  
+  
+  
+  # save(x,result,kors,file="20140215mxstandkors.rdata")
+#+END_SRC
+
+  - HB is in morphologie und xray enthalten - welches ist gemeint, erstmal fuer beide gemacht
+
+* korrel. druckmessung schritt morph roent
+#+BEGIN_SRC R :session
+  tt <- load("20140215xray.rdata")
+  tt <- load("20140215morph.rdata")
+  
+  names(xray)[grep("HB",names(xray))] <- c("HB.xray_1","HB.xray_6")
+  
+  mx <- merge(xray,morph,all=T)
+  names(mx) <- tolower(names(mx))
+  # save(mx,file="20140215mx.rdata")
+  
+  tt <- load("20140209druckschritt.rdata")
+  names(x)[17] <- "Kraft.Zehe_1"
+  names(x) <- tolower(names(x))
+  
+  x <- merge(mx,x)
+  names(x) <- gsub("\\._","_",names(x))
+  # save(x,file="20140215morphxraystand.rdata")
+  
+  kors <- as.character(as.matrix(read.delim("clipboard",header=F,encoding="latin1")))
+  kors <- read.delim("clipboard")
+  kors <- gsub("ä","ae",kors)
+  kors <- gsub("ß","ss",kors)
+  kors <- tolower(kors)
+  kors <- gsub("dips","dip",kors)
+  kors <- gsub("[ -]","\\.",kors)
+  kors <- gsub("\\.$","",kors)
+  kors <- gsub("support","supp",kors)
+  kors <- gsub("/","\\.",kors)
+  kors[grep("flaeche|kraft",kors,ignore.case = T)] <- gsub("(^[a-z]+)\\.([a-z]+)$","\\2\\.\\1",kors[grep("flaeche|kraft",kors,ignore.case = T)])
+  kors <- as.data.frame(matrix(kors,ncol=2))
+  
+  hufs <- list()
+  res <- list()
+  for(j in c(1,6)){
+      tmp.df <- x[x$bearbeitung=="vor",c(1:7,grep(paste0("_",j,"$|huf.s|gm.s"),names(x)))]
+      names(tmp.df) <- gsub(paste0("_",j,"$"),"",names(tmp.df))
+      cts <- list()
+      
+      for(i in 1:nrow(kors)){
+          var1 <- as.character(kors$V1[i])
+          var2 <- as.character(kors$V2[i])
+          if(grepl("gm\\.s|huf\\.s",var1) | grepl("gm\\.s|huf\\.s",var2) ) {
+              if(grepl("gm\\.s|huf\\.s",var1)){
+                  tmp <- var1
+                  var1 <- var2
+                  var2 <- tmp
+              }
+              cts[[i]] <- NA
+              hufs[[length(hufs)+1]] <- ggplot(tmp.df,aes_string(x=var2,y=var1)) + geom_boxplot(notch=T) + ggtitle(paste(var1,"~",var2,"ZP:",j)) + theme_bw()
+              next
+          }
+          if(j==1 & (grepl("flaeche.zehe",var1)|grepl("flaeche.zehe",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          if(j==1 & (grepl("flaeche.seiten",var1)|grepl("flaeche.seiten",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          if(j==1 & (grepl("flaeche.trachten",var1)|grepl("flaeche.trachten",var2))) {
+              cts[[i]] <- NA
+              next
+          }
+          cts[[i]] <- cor.test(tmp.df[,var1],tmp.df[,var2],method="spearman")
+      }
+      
+      kors$cor <- sapply(cts,function(x) {
+          if(is.na(x)){
+              return(NA)
+          }
+          x$estimate})
+      kors$cor.pval <- sapply(cts,function(x) { if(is.na(x)) {return(NA)}; x$p.value})
+      kors$zp <- j
+      res[[j]] <- kors
+  }
+  
+  result <-  Reduce(rbind,res)
+  
+  ml = do.call(marrangeGrob, c(hufs, list(nrow=2, ncol=2)))
+  ggsave("20140307xrayschrittmorph.pdf", ml)
+  
+  
+  wb <- loadWorkbook("201402Druckkorrs.xlsx")
+  createSheet(wb,name="morpxrayschritt")
+  writeWorksheet(wb,result,sheet = "morpxrayschritt")
+  saveWorkbook(wb)
+  
+  # save(x,result,kors,file="20140215mxschrittkors.rdata")
+#+END_SRC
+
+* korr druck stand schritt
+#+BEGIN_SRC R :session
+  tt <- load("20140209druckschritt.rdata")
+  names(x)[17] <- "Kraft.Zehe_1"
+  schritt6 <-  x[x$Bearbeitung=="vor",grep("Gruppe|Tier|Huf|Bearbeitung|_6",names(x))]
+  tt <- load("20140209druckstand.rdata")
+  names(x)[18] <- "Kraft.Zehe_1"
+  stand6 <-  x[x$Bearbeitung=="vor",grep("Gruppe|Tier|Huf|Bearbeitung|_6",names(x))]
+  
+  names(stand6)[-c(1:4)] <- paste("stand",names(stand6)[-c(1:4)],sep=".")
+  names(schritt6)[-c(1:4)] <- paste("schritt",names(schritt6)[-c(1:4)],sep=".")
+  
+  names(stand6) <- tolower(names(stand6))
+  names(schritt6) <- tolower(names(schritt6))
+  
+  intersect(stand6,schritt6)
+  
+  x <- merge(stand6,schritt6)
+  
+  kors <- as.character(as.matrix(read.delim("clipboard",header=F,encoding="latin1")))
+  kors <- gsub("ä","ae",kors)
+  kors <- gsub("ß","ss",kors)
+  kors <- tolower(kors)
+  kors <- gsub("dips","dip",kors)
+  kors <- gsub("[ -]","\\.",kors)
+  kors <- gsub("\\.$","",kors)
+  kors <- gsub("support","supp",kors)
+  kors <- gsub("/","\\.",kors)
+  kors[grep("flaeche|kraft",kors,ignore.case = T)] <- gsub("(^[a-z]+)\\.([a-z]+)$","\\2\\.\\1",kors[grep("flaeche|kraft",kors,ignore.case = T)])
+  kors <- paste(rep(c("stand","schritt"),each=length(kors)/2),kors,sep = ".")
+  kors <- as.data.frame(matrix(kors,ncol=2))
+  
+  tmp.df <- x[x$bearbeitung=="vor",c(1:5,grep("_6$",names(x)))]
+  names(tmp.df) <- gsub("_6$","",names(tmp.df))
+  
+  cts <- list()
+  for(i in 1:nrow(kors)){
+      var1 <- as.character(kors$V1[i])
+      var2 <- as.character(kors$V2[i])
+      cts[[i]] <- cor.test(tmp.df[,var1],tmp.df[,var2],method="spearman")
+  }
+  
+  kors$cor <- sapply(cts,function(x) {
+      if(is.na(x)){
+          return(NA)
+      }
+      x$estimate})
+  kors$cor.pval <- sapply(cts,function(x) { if(is.na(x)) {return(NA)}; x$p.value})
+  
+  wb <- loadWorkbook("201402Druckkorrs.xlsx")
+  createSheet(wb,name="standschritt")
+  writeWorksheet(wb,kors,sheet = "standschritt")
+  saveWorkbook(wb)
+  
+  # save(x,kors,file="20140215standschrittkorrs.rdata")
+#+END_SRC
+* beschreibende statistik
+#+BEGIN_SRC R :session
+  setwd("/media/mvogel/Volume/transcend/vetmed/hagenjenny/")
+  
+  load("20140209druckschritt.rdata")
+  basisdaten <- x
+  
+  
+  res <- list()
+  for(i in 8:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg <- Reduce(rbind,res)
+  erg$file <- "druckschritt"
+  
+  tt <- load("20140209druckstand.rdata")
+  x <- x[x$Bearbeitung=="vor",]
+  
+  res <- list()
+  for(i in 8:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg2 <- Reduce(rbind,res)
+  erg2$file <- "druckstand"
+  
+  erg <- rbind(erg,erg2)
+  
+  
+  tt <- load("20140215morph.rdata")
+  x <- morph[morph$Bearbeitung=="vor",]
+  
+  res <- list()
+  for(i in 5:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg2 <- Reduce(rbind,res)
+  erg2$file <- "morph"
+  
+  erg <- rbind(erg,erg2)
+  
+  tt <- load("20140215xray.rdata")
+  x <- xray[xray$Bearbeitung=="vor",]
+  
+  res <- list()
+  for(i in 5:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg2 <- Reduce(rbind,res)
+  erg2$file <- "xray"
+  
+  erg.vor <- rbind(erg,erg2)
+  
+  ## save(erg,file="20140220descriptives.rdata")
+  
+  setwd("/media/mvogel/Volume/transcend/vetmed/hagenjenny/")
+  
+  load("20140209druckschritt.rdata")
+  basisdaten <- x
+  
+  
+  res <- list()
+  for(i in 8:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg <- Reduce(rbind,res)
+  erg$file <- "druckschritt"
+  
+  tt <- load("20140209druckstand.rdata")
+  x <- x[x$Bearbeitung=="nach",]
+  
+  res <- list()
+  for(i in 8:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg2 <- Reduce(rbind,res)
+  erg2$file <- "druckstand"
+  
+  erg <- rbind(erg,erg2)
+  
+  
+  tt <- load("20140215morph.rdata")
+  x <- morph[morph$Bearbeitung=="nach",]
+  
+  res <- list()
+  for(i in 5:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg2 <- Reduce(rbind,res)
+  erg2$file <- "morph"
+  
+  erg <- rbind(erg,erg2)
+  
+  tt <- load("20140215xray.rdata")
+  x <- xray[xray$Bearbeitung=="nach",]
+  
+  res <- list()
+  for(i in 5:ncol(x)){
+      res[[length(res)+1]] <- data.frame(var=names(x)[i],
+                                         mean=mean(x[,i],na.rm = T),
+                                         sd=sd(x[,i],na.rm = T),
+                                         se=sd(x[,i],na.rm = T)/sqrt(sum(!is.na(x[,i]))),
+                                         median=median(x[,i],na.rm = T),
+                                         min=min(x[,i],na.rm = T),
+                                         max=max(x[,i],na.rm = T))
+  }
+  
+  erg2 <- Reduce(rbind,res)
+  erg2$file <- "xray"
+  
+  erg.nach <- rbind(erg,erg2)
+  
+  ## require(XLConnect)
+  ## wb <- loadWorkbook("201506descriptives.xlsx",create=T)
+  ## createSheet(wb,name="vor")
+  ## writeWorksheet(wb,erg.vor,"vor")
+  ## createSheet(wb,name="nach")
+  ## writeWorksheet(wb,erg.nach,"nach")
+  ## saveWorkbook(wb)
+  
+  ## require(XLConnect)
+  ## wb <- loadWorkbook("20140220descriptives.xlsx",create=T)
+  ## createSheet(wb,name="result")
+  ## writeWorksheet(wb,erg,"result")
+  ## saveWorkbook(wb)
+#+END_SRC
+
+* [2014-03-06 Do] descriptive aus mail
+#+BEGIN_SRC R :session
+  require(XLConnect)
+  load("20140306xray.rdata")
+  data <- xray
+  
+  res <- list()
+  
+  for(group in LETTERS[1:3]){
+      x <- data[data$Gruppe==group,]
+      xray <- x[x$Bearbeitung=="vor",]
+  
+      columns <- names(x)[5:26]
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"vor",group,sep = "_"),
+                                             mean=mean(xray[,i],na.rm = T),
+                                             sd=sd(xray[,i],na.rm = T),
+                                             se=sd(xray[,i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[,i],na.rm = T),
+                                             min=min(xray[,i],na.rm = T),
+                                             max=max(xray[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","vor",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="links",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="links",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="links",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="links",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","vor",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="rechts",i],na.rm = T))
+      }
+  
+      xray <- x[x$Bearbeitung=="nach",]
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"nach",group,sep = "_"),
+                                             mean=mean(xray[,i],na.rm = T),
+                                             sd=sd(xray[,i],na.rm = T),
+                                             se=sd(xray[,i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[,i],na.rm = T),
+                                             min=min(xray[,i],na.rm = T),
+                                             max=max(xray[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","nach",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="links",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="links",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="links",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="links",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","nach",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="rechts",i],na.rm = T))
+      }
+  }
+  
+  result <- Reduce(rbind,res)
+  
+  ## wb <- loadWorkbook("20140306descr.xlsx",create=T)
+  ## createSheet(wb,name="roentgen")
+  ## writeWorksheet(wb,result,"roentgen")
+  ## saveWorkbook(wb)
+  
+  load("20140215morph.rdata")
+  
+  data <- morph
+  res <- list()
+  
+  for(group in LETTERS[1:3]){
+      x <- data[data$Gruppe==group,]
+      morph <- x[x$Bearbeitung=="vor",]
+  
+      columns <- names(x)[5:82]
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"vor",group,sep = "_"),
+                                             mean=mean(morph[,i],na.rm = T),
+                                             sd=sd(morph[,i],na.rm = T),
+                                             se=sd(morph[,i],na.rm = T)/sqrt(sum(!is.na(morph[,i]))),
+                                             median=median(morph[,i],na.rm = T),
+                                             min=min(morph[,i],na.rm = T),
+                                             max=max(morph[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","vor",group,sep = "_"),
+                                             mean=mean(morph[morph$Huf=="links",i],na.rm = T),
+                                             sd=sd(morph[morph$Huf=="links",i],na.rm = T),
+                                             se=sd(morph[morph$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(morph[,i]))),
+                                             median=median(morph[morph$Huf=="links",i],na.rm = T),
+                                             min=min(morph[morph$Huf=="links",i],na.rm = T),
+                                             max=max(morph[morph$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","vor",group,sep = "_"),
+                                             mean=mean(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             se=sd(morph[morph$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(morph[,i]))),
+                                             median=median(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             min=min(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             max=max(morph[morph$Huf=="rechts",i],na.rm = T))
+      }
+  
+      morph <- x[x$Bearbeitung=="nach",]
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"nach",group,sep = "_"),
+                                             mean=mean(morph[,i],na.rm = T),
+                                             sd=sd(morph[,i],na.rm = T),
+                                             se=sd(morph[,i],na.rm = T)/sqrt(sum(!is.na(morph[,i]))),
+                                             median=median(morph[,i],na.rm = T),
+                                             min=min(morph[,i],na.rm = T),
+                                             max=max(morph[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","nach",group,sep = "_"),
+                                             mean=mean(morph[morph$Huf=="links",i],na.rm = T),
+                                             sd=sd(morph[morph$Huf=="links",i],na.rm = T),
+                                             se=sd(morph[morph$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(morph[,i]))),
+                                             median=median(morph[morph$Huf=="links",i],na.rm = T),
+                                             min=min(morph[morph$Huf=="links",i],na.rm = T),
+                                             max=max(morph[morph$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","nach",group,sep = "_"),
+                                             mean=mean(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             se=sd(morph[morph$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(morph[,i]))),
+                                             median=median(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             min=min(morph[morph$Huf=="rechts",i],na.rm = T),
+                                             max=max(morph[morph$Huf=="rechts",i],na.rm = T))
+      }
+  }
+  result <- Reduce(rbind,res)
+  
+  wb <- loadWorkbook("20140306descr.xlsx")
+  createSheet(wb,name="morph")
+  writeWorksheet(wb,result,"morph")
+  saveWorkbook(wb)
+#+END_SRC
+* [2014-03-09 So] korpairs
+#+BEGIN_SRC R :session
+  prs <- list()
+  load("20140215mxschrittkors.rdata")
+  prs[[1]] <- kors[,1:2]
+  prs[[1]]$tabblatt <- "morphxrayschritt"
+  load("20140215mxstandkors.rdata")
+  prs[[2]] <- kors[,1:2]
+  prs[[2]]$tabblatt <- "morphxraystand"
+  load("20140215standschrittkorrs.rdata")
+  prs[[3]] <- kors[,1:2]
+  prs[[3]]$tabblatt <- "standschritt"
+  load("201402cor1.rdata")
+  prs[[4]] <- res[,1:2]
+  prs[[4]]$tabblatt <- "morph"
+  prs[[4]]$tabblatt[10:25] <- "xray"
+  prs[[4]]$tabblatt[26:nrow(res)] <- "morphxray"
+  load("201402druckstand.rdata")
+  prs[[5]] <- kors[,1:2]
+  prs[[5]]$tabblatt <- "druckstand"
+  load("201402druckschritt.rdata")
+  prs[[6]] <- kors[,1:2]
+  prs[[6]]$tabblatt <- "druckschritt"
+  korpairs <- Reduce(rbind,prs)
+  ## save(korpairs,prs,file="20140309korrpaare.rdata")
+  
+  require(XLConnect)
+  wb <- loadWorkbook("korrs.xlsx")
+  krs <- list()
+  for(sheet in getSheets(wb)){
+      
+  }
+#+END_SRC
+* [2014-03-09 So] [2014-03-15 Sa] gruppen grafiken
+#+BEGIN_SRC R :session
+  tt <- load("20140215morph.rdata")
+  names(morph) <- tolower(names(morph))
+  require(reshape2)
+  require(gridExtra)
+  require(ggplot2)
+  tmp <- melt(morph,id.vars = c("gruppe","tier","huf","bearbeitung"))
+  tmp$var <- gsub("_[1-6]","",tmp$variable)
+  tmp$zp <- as.numeric(gsub(".+_","",tmp$variable))
+  tmp$variable <- paste(tmp$variable,tmp$bearbeitung)
+  tmp$gruppe <- paste(tmp$var,tmp$gruppe)
+
+  tmp$bearbeitung2 <- factor(tmp$bearbeitung,
+                             levels = c("vor","nach"),
+                             labels = c("before","after"))
+
+
+  mean2 <- function(x){round(mean(x,na.rm = T),2)}
+  p <- ggplot(tmp,aes(x=factor(zp),fill=bearbeitung2,y=value)) +
+      geom_boxplot() +
+      facet_grid(huf~gruppe) +
+      stat_summary(fun.y="mean2",geom="point",position=position_dodge(width=0.8)) +
+      stat_summary(aes(label=..y..),fun.y="mean2",geom="text",position=position_dodge(width=0.8),size=4,fontface=2,hjust=-0.5,angle=90) +
+      scale_fill_manual("",values = c("darkgreen","darkred")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+
+  detach("package:dplyr")
+  detach("package:plyr")
+  require(plyr)
+  require(dplyr)
+
+  plots <- dlply(tmp,.(var),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+
+  ## ggsave("20140315morph.pdf",ml,height=21,width=29.7,units="cm")
+
+  ggplot(tmp[tmp$var=="hr",],aes(x=factor(zp),fill=bearbeitung2,y=value)) +
+      geom_boxplot() +
+      facet_grid(huf~gruppe) +
+      stat_summary(fun.y="mean2",geom="point",position=position_dodge(width=0.8)) +
+      stat_summary(aes(label=..y..),fun.y="mean2",geom="text",position=position_dodge(width=0.8),size=3,hjust=1,angle=90) +
+      scale_fill_manual("",values = c("darkgreen","darkred")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+
+  plots <- dlply(tmp,.(var,bearbeitung),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+
+  p <- ggplot(tmp,aes(x=gruppe,fill=huf,y=value)) +
+      geom_boxplot() +
+      facet_wrap(huf~variable,nrow=3) +
+      scale_fill_manual("",values = c("darkgreen","darkred")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+
+  plots <- dlply(tmp,.(var,bearbeitung),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+
+
+
+  ggsave("20140309morph.pdf",ml,width=21,height=29.7,units="cm")
+
+  tt <- load("20140215xray.rdata")
+  #names(xray)[15] <- paste0(names(xray)[15],"_1")
+  #names(xray)[26] <- gsub("_1","_6",names(xray)[26])
+  #names(xray)[25] <- gsub("\\.1_1","_6",names(xray)[25])
+  ## save(xray,file="20140215xray.rdata")
+  names(xray) <- tolower(names(xray))
+
+  tmp <- melt(xray,id.vars = c("gruppe","tier","huf","bearbeitung"))
+  tmp$var <- gsub("_[1-6]","",tmp$variable)
+  tmp$zp <- gsub(".+_","",tmp$variable)
+  tmp$variable <- paste(tmp$variable,tmp$bearbeitung)
+  tmp$gruppe <- paste(tmp$var,tmp$gruppe)
+  tmp$bearbeitung <- relevel(tmp$bearbeitung,ref="vor")
+
+  mean2 <- function(x){round(mean(x,na.rm = T),2)}
+
+  p <- ggplot(tmp,aes(x=factor(zp),fill=bearbeitung,y=value)) +
+      geom_boxplot() +
+      facet_grid(huf~gruppe) +
+      stat_summary(fun.y="mean2",geom="point",position=position_dodge(width=0.8)) +
+      stat_summary(aes(label=..y..),fun.y="mean2",geom="text",position=position_dodge(width=0.8),size=4,fontface=2,hjust=-0.5,angle=90) +
+      scale_fill_manual("",values = c("white","grey50")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+
+
+  plots <- dlply(tmp,.(var),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+  ggsave("20140315xray.pdf",ml,height=21,width=29.7,units="cm")
+
+  tt <- load("20140209druckschritt.rdata")
+  names(x) <- tolower(names(x))
+  tmp <- melt(x,id.vars = c("gruppe","tier","huf","bearbeitung","bewegung","gm.s","huf.s"))
+  tmp$var <- gsub("_[1-6]","",tmp$variable)
+  tmp$zp <- as.numeric(gsub(".+_","",tmp$variable))
+  tmp$bearbeitung <- factor(tmp$bearbeitung,levels=c("vor","nach"),labels=c("before","after"))
+  tmp$huf <- factor(tmp$huf,levels = c("links","rechts"),labels = c("left","right"))
+
+
+  tmp$var <- factor(tmp$var,levels = c("abrollpunkt","dv.ant","dv.lat","dv.med","dv.post","flaeche.ges","flaeche.seiten","flaeche.trachten","flaeche.zehe","kraft.seiten","kraft.trachten","kraft.zehe","lage.cof.ap","lage.cof.ml"),
+  labels = c("Breakover","PressureForces(ant)","PressureForces(lat)","PressureForces(med)","PressureForces(post)","Area","Area(middle)","Area(heels)","Area(toe)","Press.Forces(middle)","Press.Forces(heels)","Press.Forces(toe)","CoF(dp)","CoF(ml)"))
+
+
+  tmp$gruppe <- paste(tmp$var,tmp$gruppe)
+
+  tmp <- tmp[!grepl("auffussen",tmp$variable),]
+  tmp <- tmp[!is.na(tmp$value),]
+              
+
+
+
+
+  mean2 <- function(x){round(mean(x,na.rm = T),2)}
+
+  p <- ggplot(tmp,aes(x=factor(zp),fill=bearbeitung,y=value)) +
+      geom_boxplot() +
+      facet_grid(huf~gruppe) +
+      stat_summary(fun.y="mean2",geom="point",position=position_dodge(width=0.8)) +
+      stat_summary(aes(label=..y..),fun.y="mean2",geom="text",position=position_dodge(width=0.8),size=4,fontface=2,hjust=-0.5,angle=90) +
+      scale_fill_manual("",values = c("white","grey50")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+
+
+  plots <- dlply(tmp,.(var),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+  ggsave("20150703druckschritt.pdf",ml,height=21,width=29.7,units="cm")
+  ## XXXX ggsave("20140315druckschritt.pdf",ml,height=21,width=29.7,units="cm")
+
+  tt <- load("20140209druckstand.rdata")
+  names(x) <- tolower(names(x))
+  tmp <- melt(x,id.vars = c("gruppe","tier","huf","bearbeitung","bewegung","gm.s","huf.s"))
+  tmp$var <- gsub("_[1-6]","",tmp$variable)
+  tmp$zp <- as.numeric(gsub(".+_","",tmp$variable))
+  tmp$bearbeitung <- factor(tmp$bearbeitung,levels=c("vor","nach"))
+  tmp$gruppe <- paste(tmp$var,tmp$gruppe)
+
+  tmp <- tmp[!is.na(tmp$value),]
+
+  require(plyr)
+  plots <- dlply(tmp,.(var),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+
+  ggsave("20140315druckstand.pdf",ml,height=21,width=29.7,units="cm")
+
+
+  p <- ggplot(tmp,aes(x=gruppe,fill=huf,y=value)) +
+      geom_boxplot() +
+      facet_wrap(~variable,nrow=2) +
+      scale_fill_manual("",values = c("darkgreen","darkred")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+
+  require(plyr)
+  plots <- dlply(tmp,.(var,bearbeitung),`%+%`,e1=p)
+  ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+  ggsave("20140309druckstandschritt.pdf",ml,width=21,height=29.7,units="cm")
+
+
+
+#+END_SRC
+* [2014-03-10 Mo] [2014-04-06 So] auffussen ## das recoding muss dringend kontrolliert werden!
+#+BEGIN_SRC R :session
+  load("20140209druckschritt.rdata")
+  require(car)
+  mean2 <- function(x){round(mean(x,na.rm = T),2)}
+  
+  
+  cor.test(x$Auffussen_1,x$DV.med_1,method = "spearman")
+  cor.test(x$Auffussen_1,x$DV.lat_1,method = "spearman")
+  cor.test(x$Auffussen_1,x$DV.lat_1,method = "spearman")
+  
+  ## paare laden
+  tt <- load("20140309korrpaare.rdata")
+  
+  p <- list()
+  
+  for(seite in c("links","rechts")){
+  
+  ## daten laden
+  tt <- load("20140215morph.rdata") ## morph
+  tt <- load("20140215xray.rdata")  ## xray
+  tt <- load("20140209druckstand.rdata")
+  dstand <- x
+  tt <- load("20140209druckschritt.rdata")
+  dschr <- x
+  
+  ## variablen namen to lower case
+  
+  names(morph) <- tolower(names(morph))
+  names(xray) <- tolower(names(xray))
+  names(dstand) <- tolower(names(dstand))
+  names(dschr) <- tolower(names(dschr))
+  
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+      print(table(dschr[,paste0("auffussen_",i)]))
+  }
+  
+  
+  dstand$gm.s <- gsub("[^a-z]","",dstand$gm.s)
+  dstand$huf.s <- gsub("[^a-z]","",dstand$huf.s)
+  
+  dschr$gm.s <- gsub("[^a-z]","",dschr$gm.s)
+  dschr$huf.s <- gsub("[^a-z]","",dschr$huf.s)
+  
+  
+  morph <- morph[morph$huf==seite,]
+  xray <- xray[xray$huf==seite,]
+  dstand <- dstand[dstand$huf==seite,]
+  dschr <- dschr[dschr$huf==seite,]
+  
+  ## Varianzanalyse gm.s dschr
+  pr <- prs[[6]]
+  pr <- pr[pr$V1!="auffussen" & pr$V2=="gm.s",]
+  
+  require(ggplot2)
+  
+  res <- list()
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          var1 <- paste(pr$V1[i],j,sep = "_")
+          if(!(var1 %in% names(dschr))) {next}
+          tmp <- as.data.frame(summary.lm(lm(dschr[,var1] ~ factor(dschr$gm.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "gm.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "druckschritt"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(dschr,aes_string(x="gm.s",y=var1,fill="gm.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +                
+              theme_bw() +
+              ggtitle(seite) +                
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  pr <- prs[[6]]
+  pr <- pr[pr$V1=="auffussen" & pr$V2=="gm.s",]
+  
+  for(i in 1:nrow(pr)){
+      for(r in c("auff.med","auff.sag")){
+          for(j in 1:6){
+              var1 <- paste(r,j,sep = "_")
+              if(!(var1 %in% names(dschr))) {next}
+              tmp <- as.data.frame(summary.lm(lm(dschr[,var1] ~ factor(dschr$gm.s)))$coefficients)
+              tmp$var1 <- var1
+              tmp$var2 <- "gm.s"
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "druckschritt"
+              res[[length(res)+1]] <- tmp
+              p[[length(p)+1]] <- ggplot(dschr,aes_string(x="gm.s",y=var1,fill="gm.s")) +
+                  geom_boxplot(notch = T) +
+                      stat_summary(fun.data=mean_cl_boot,colour="red") +
+                          stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +                
+                              theme_bw() +
+              ggtitle(seite) +                                
+                                  theme(
+                                      legend.position="none"
+                                      )
+          }
+      }
+  }
+  
+  
+  ## Varianzanalyse huf.s dschr
+  pr <- prs[[6]]
+  pr <- pr[pr$V1!="auffussen" & pr$V2=="huf.s",]
+  
+  require(ggplot2)
+  
+  for(i in 1:nrow(pr)){
+      for(r in c("auff.med","auff.sag")){
+          for(j in 1:6){
+              var1 <- paste(r,j,sep = "_")
+              if(!(var1 %in% names(dschr))) {next}
+              tmp <- as.data.frame(summary.lm(lm(dschr[,var1] ~ factor(dschr$huf.s)))$coefficients)
+              tmp$var1 <- var1
+              tmp$var2 <- "huf.s"
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "druckschritt"
+              res[[length(res)+1]] <- tmp
+              p[[length(p)+1]] <- ggplot(dschr,aes_string(x="huf.s",y=var1,fill="huf.s")) +
+                  geom_boxplot(notch = T) +
+                      stat_summary(fun.data=mean_cl_boot,colour="red") +
+                          stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +                
+                              theme_bw() +
+              ggtitle(seite) +                                
+                                  theme(
+                                      legend.position="none"
+                                      )
+          }
+      }
+  }
+  
+  
+  ## Varianzanalyse gm.s dstand
+  pr <- prs[[5]]
+  pr <- pr[pr$V1!="auffussen" & pr$V2=="gm.s",]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          var1 <- paste(pr$V1[i],j,sep = "_")
+          if(!(var1 %in% names(dstand))) {next}
+          tmp <- as.data.frame(summary.lm(lm(dstand[,var1] ~ factor(dstand$gm.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "gm.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "druckstand"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(dstand,aes_string(x="gm.s",y=var1,fill="gm.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +                
+              theme_bw() +
+              ggtitle(seite) +                
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  
+  ## Varianzanalyse huf.s dstand
+  pr <- prs[[5]]
+  pr <- pr[pr$V1!="auffussen" & pr$V2=="huf.s",]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          var1 <- paste(pr$V1[i],j,sep = "_")
+          if(!(var1 %in% names(dstand))) {next}
+          tmp <- as.data.frame(summary.lm(lm(dstand[,var1] ~ factor(dstand$huf.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "huf.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "druckstand"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(dstand,aes_string(x="huf.s",y=var1,fill="huf.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +            
+              theme_bw() +
+              ggtitle(seite) +                
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  ## morph xray stand und schritt mergen
+  names(xray) <- gsub("hb","hb.xray",names(xray))
+  
+  mx <- merge(morph,xray)
+  mxstand <- merge(mx,dstand)
+  mxschr <- merge(mx,dschr)
+  
+  ## morph xray stand 
+  pr <- prs[[2]]
+  pr <- pr[(pr$V1!="auffussen" & pr$V2=="huf.s") | (pr$V2!="auffussen" & pr$V1=="huf.s"),]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="huf.s"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          if(!(var1 %in% names(mxstand))) {next}
+          tmp <- as.data.frame(summary.lm(lm(mxstand[,var1] ~ factor(mxstand$huf.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "huf.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "morphxraystand"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(mxstand,aes_string(x="huf.s",y=var1,fill="huf.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +
+              theme_bw() +
+              ggtitle(seite) +                
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  
+  pr <- prs[[2]]
+  pr <- pr[(pr$V1!="auffussen" & pr$V2=="gm.s") | (pr$V2!="auffussen" & pr$V1=="gm.s"),]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="gm.s"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          if(!(var1 %in% names(mxstand))) {next}
+          tmp <- as.data.frame(summary.lm(lm(mxstand[,var1] ~ factor(mxstand$gm.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "gm.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "morphxraystand"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(mxstand,aes_string(x="gm.s",y=var1,fill="gm.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +
+              theme_bw() +
+              ggtitle(seite) +                
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  
+  ## morph xray schritt
+  pr <- prs[[1]]
+  pr <- pr[(pr$V1!="auffussen" & pr$V2=="huf.s") | (pr$V2!="auffussen" & pr$V1=="huf.s"),]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="huf.s"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          if(!(var1 %in% names(mxschr))) {next}
+          tmp <- as.data.frame(summary.lm(lm(mxschr[,var1] ~ factor(mxschr$huf.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "huf.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "morphxrayschritt"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(mxschr,aes_string(x="huf.s",y=var1,fill="huf.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +
+              theme_bw() +
+              ggtitle(seite) +                
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  
+  pr <- prs[[1]]
+  pr <- pr[(pr$V1!="auffussen" & pr$V2=="gm.s") | (pr$V2!="auffussen" & pr$V1=="gm.s"),]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="gm.s"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          if(!(var1 %in% names(mxschr))) {next}
+          tmp <- as.data.frame(summary.lm(lm(mxschr[,var1] ~ factor(mxschr$gm.s)))$coefficients)
+          tmp$var1 <- var1
+          tmp$var2 <- "gm.s"
+          tmp$zeitpunkt <- j
+          tmp$tabelle <- "morphxrayschritt"
+          res[[length(res)+1]] <- tmp
+          p[[length(p)+1]] <- ggplot(mxschr,aes_string(x="gm.s",y=var1,fill="gm.s")) +
+              geom_boxplot(notch = T) +
+              stat_summary(fun.data=mean_cl_boot,colour="red") +
+              stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +
+              theme_bw() +
+              ggtitle(seite) +
+              theme(
+                 legend.position="none"
+                  )
+      }
+  }
+  
+  
+  
+  
+  ## zusammen
+  
+  if(seite=="links"){
+      reslinks <- Reduce(rbind,res)
+      reslinks$huf <- seite
+      reslinks$var <- row.names(reslinks)
+  }
+  
+  if(seite=="rechts"){
+      resrechts <- Reduce(rbind,res)
+      resrechts$huf <- seite
+      resrechts$var <- row.names(resrechts)
+  }
+  
+  
+  }
+  
+  res <- rbind(reslinks,resrechts)
+  
+  require(gridExtra)
+  ml <- do.call(marrangeGrob, c(p, list(nrow=2, ncol=2)))
+  ggsave("20140407gmshufslr.pdf",ml,height=21,width=29.7,units="cm")
+  
+   require(XLConnect)
+  wb <- loadWorkbook("20140407varangmshufsrl.xlsx",create=T)
+  createSheet(wb,"res")
+  writeWorksheet(wb,res,"res")
+  saveWorkbook(wb)
+  
+  ## nicht geeignet
+  require(ICC)
+  ICCbare(gm.s,dv.lat_2,data = dschr)
+  
+  lstable(x$auff.med_1,x$GM.S)
+  table(x$auff.sag_1,x$GM.S)
+  
+  require(vcd)
+  mosaic(table(factor(x$auff.sag_1),x$GM.S,dnn = list("auf.sag","gm.s")),shade=T,legend=T)
+  mosaic(table(factor(x$auff.sag_1),x$GM.S,dnn = list("auf.sag","gm.s")),shade=T,legend=T)
+  
+  for(i in 1:6){
+      bearb <- "nach"
+      mosaic(table(factor(x[x$Bearbeitung==bearb,paste0("auff.sag_",i)]),factor(x[x$Bearbeitung==bearb,paste0("auff.med_",i)]),dnn = list("Auffussen sagittal","Auffussen medial")),shade=T,legend=T)
+      savePlot(paste0("mosaicauffussen_",bearb,"_",i,".png"))
+  }
+  
+  ## nochmal mit Gruppe
+  for(i in 1:6){
+      bearb <- "nach"
+      mosaic(table(x$Gruppe[x$Bearbeitung==bearb],factor(x[x$Bearbeitung==bearb,paste0("auff.sag_",i)]),factor(x[x$Bearbeitung==bearb,paste0("auff.med_",i)]),dnn = list("Gruppe","Auffussen sagittal","Auffussen medial")),shade=T,legend=T)
+      savePlot(paste0("mosaicauffussenmitgruppe_",bearb,"_",i,".png"))
+  }
+  
+  ## auffussen
+  
+  p <- list()
+  
+  for(seite in c("links","rechts")){
+  
+  ## daten laden
+  tt <- load("20140215morph.rdata") ## morph
+  tt <- load("20140215xray.rdata")  ## xray
+  tt <- load("20140209druckstand.rdata")
+  dstand <- x
+  tt <- load("20140209druckschritt.rdata")
+  dschr <- x
+  
+  ## variablen namen to lower case
+  
+  names(morph) <- tolower(names(morph))
+  names(xray) <- tolower(names(xray))
+  names(dstand) <- tolower(names(dstand))
+  names(dschr) <- tolower(names(dschr))
+  
+  ## morph xray stand und schritt mergen
+  
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+      print(table(dschr[,paste0("auffussen_",i)]))
+  }
+  
+  
+  names(xray) <- gsub("hb","hb.xray",names(xray))
+  
+  mx <- merge(morph,xray)
+  mxstand <- merge(mx,dstand)
+  mxschr <- merge(mx,dschr)
+  
+  
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+  #    print(table(dschr[,paste0("auffussen_",i)]))
+  }
+  
+  
+  dstand$gm.s <- gsub("[^a-z]","",dstand$gm.s)
+  dstand$huf.s <- gsub("[^a-z]","",dstand$huf.s)
+  
+  dschr$gm.s <- gsub("[^a-z]","",dschr$gm.s)
+  dschr$huf.s <- gsub("[^a-z]","",dschr$huf.s)
+  
+  
+  morph <- morph[morph$huf==seite,]
+  xray <- xray[xray$huf==seite,]
+  dstand <- dstand[dstand$huf==seite,]
+  dschr <- dschr[dschr$huf==seite,]
+  
+  print(paste(seite,nrow(morph),nrow(xray),nrow(dstand),nrow(dschr)))
+  
+  res <- list()
+  
+  pr <- prs[[1]]
+  pr <- pr[pr$V1=="auffussen",]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="auffussen"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          for(r in c("auff.med","auff.sag")){        
+              r <- paste(r,j,sep = "_")
+              mxschr[,r] <- factor(mxschr[,r])
+              mxschr[,r] <- relevel(mxschr[,r],ref=2)
+              if(!(var1 %in% names(mxschr))) {next}
+              tmp <- as.data.frame(summary.lm(lm(mxschr[,var1] ~ mxschr[,r]))$coefficients)
+              tmp$var1 <- var1
+              tmp$var2 <- r
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "morphxrayschritt"
+              res[[length(res)+1]] <- tmp
+              p[[length(p)+1]] <- ggplot(mxschr,aes_string(x=r,y=var1,fill=r)) +
+                  geom_boxplot(notch = T) +
+                      stat_summary(fun.data=mean_cl_boot,colour="red") +
+                          stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +
+                              theme_bw() +
+                                  ggtitle(seite) +                                
+                                  theme(
+                                      legend.position="none"
+                                      )
+          }
+      }
+  }
+  
+  pr <- prs[[6]]
+  pr <- pr[pr$V1=="auffussen" & !grepl("gm.s|huf.s",pr$V2),]
+  
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="auffussen"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          for(r in c("auff.med","auff.sag")){        
+              r <- paste(r,j,sep = "_")
+              dschr[,r] <- factor(dschr[,r])
+              mxschr[,r] <- relevel(dschr[,r],ref=0)
+              if(!(var1 %in% names(dschr))) {next}
+              tmp <- as.data.frame(summary.lm(lm(dschr[,var1] ~ dschr[,r]))$coefficients)
+              tmp$var1 <- var1
+              tmp$var2 <- r
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "morphxrayschritt"
+              res[[length(res)+1]] <- tmp
+              p[[length(p)+1]] <- ggplot(dschr,aes_string(x=r,y=var1,fill=r)) +
+                  geom_boxplot(notch = T) +
+                      stat_summary(fun.data=mean_cl_boot,colour="red") +
+                          stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",hjust = 1.1) +
+                              theme_bw() +
+              ggtitle(seite) +                                
+                                  theme(
+                                      legend.position="none"
+                                      )
+          }
+      }
+  }
+  
+  if(seite=="links"){
+      reslinks <- Reduce(rbind,res)
+      reslinks$huf <- seite
+      reslinks$var <- row.names(reslinks)
+  }
+  
+  if(seite=="rechts"){
+      resrechts <- Reduce(rbind,res)
+      resrechts$huf <- seite
+      resrechts$var <- row.names(resrechts)
+  }
+  
+  
+  }
+  
+  res <- rbind(resrechts,reslinks)
+  
+  require(gridExtra)
+  ml <- do.call(marrangeGrob, c(p, list(nrow=2, ncol=2)))
+  ggsave("20140406auffussenrl.pdf",ml,height=21,width=29.7,units="cm")
+  
+  require(XLConnect)
+  wb <- loadWorkbook("20140406auffussenrl.xlsx",create=T)
+  createSheet(wb,"res")
+  writeWorksheet(wb,res,"res")
+  saveWorkbook(wb)
+  
+#+END_SRC
+* [2014-03-15 Sa] descriptives druck
+#+BEGIN_SRC R :session
+  tt <- load("20140209druckschritt.rdata")
+  data <- x
+  res <- list()
+  
+  for(group in LETTERS[1:3]){
+      x <- data[data$Gruppe==group,]
+      xray <- x[x$Bearbeitung=="vor",]
+  
+      columns <- names(x)[8:55]
+  
+      for(i in columns){
+          if(grepl("auffussen",i,ignore.case = T)) {next}
+          res[[length(res)+1]] <- data.frame(var=paste(i,"vor",group,sep = "_"),
+                                             mean=mean(xray[,i],na.rm = T),
+                                             sd=sd(xray[,i],na.rm = T),
+                                             se=sd(xray[,i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[,i],na.rm = T),
+                                             min=min(xray[,i],na.rm = T),
+                                             max=max(xray[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          if(grepl("auffussen",i,ignore.case = T)) {next}
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","vor",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="links",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="links",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="links",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="links",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","vor",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="rechts",i],na.rm = T))
+      }
+  
+      xray <- x[x$Bearbeitung=="nach",]
+      if(grepl("auffussen",i,ignore.case = T)) {next}
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"nach",group,sep = "_"),
+                                             mean=mean(xray[,i],na.rm = T),
+                                             sd=sd(xray[,i],na.rm = T),
+                                             se=sd(xray[,i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[,i],na.rm = T),
+                                             min=min(xray[,i],na.rm = T),
+                                             max=max(xray[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","nach",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="links",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="links",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="links",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="links",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","nach",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="rechts",i],na.rm = T))
+      }
+  }
+  
+  result <- Reduce(rbind,res)
+  
+  require(XLConnect)
+  wb <- loadWorkbook("201506descrdruck.xlsx",create=T)
+  createSheet(wb,name="schritt")
+  writeWorksheet(wb,result,"schritt")
+  saveWorkbook(wb)
+  
+  tt <- load("20140209druckstand.rdata")
+  data <- x
+  res <- list()
+  
+  for(group in LETTERS[1:3]){
+      x <- data[data$Gruppe==group,]
+      xray <- x[x$Bearbeitung=="vor",]
+  
+      columns <- names(x)[8:64]
+  
+      for(i in columns){
+          if(grepl("auffussen",i,ignore.case = T)) {next}
+          res[[length(res)+1]] <- data.frame(var=paste(i,"vor",group,sep = "_"),
+                                             mean=mean(xray[,i],na.rm = T),
+                                             sd=sd(xray[,i],na.rm = T),
+                                             se=sd(xray[,i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[,i],na.rm = T),
+                                             min=min(xray[,i],na.rm = T),
+                                             max=max(xray[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          if(grepl("auffussen",i,ignore.case = T)) {next}
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","vor",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="links",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="links",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="links",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="links",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","vor",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="rechts",i],na.rm = T))
+      }
+  
+      xray <- x[x$Bearbeitung=="nach",]
+      if(grepl("auffussen",i,ignore.case = T)) {next}
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"nach",group,sep = "_"),
+                                             mean=mean(xray[,i],na.rm = T),
+                                             sd=sd(xray[,i],na.rm = T),
+                                             se=sd(xray[,i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[,i],na.rm = T),
+                                             min=min(xray[,i],na.rm = T),
+                                             max=max(xray[,i],na.rm = T))
+      }
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"links","nach",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="links",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="links",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="links",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="links",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="links",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="links",i],na.rm = T))
+      }
+  
+  
+      for(i in columns){
+          res[[length(res)+1]] <- data.frame(var=paste(i,"rechts","nach",group,sep = "_"),
+                                             mean=mean(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             sd=sd(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             se=sd(xray[xray$Huf=="rechts",i],na.rm = T)/sqrt(sum(!is.na(xray[,i]))),
+                                             median=median(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             min=min(xray[xray$Huf=="rechts",i],na.rm = T),
+                                             max=max(xray[xray$Huf=="rechts",i],na.rm = T))
+      }
+  }
+  
+  result <- Reduce(rbind,res)
+  
+  require(XLConnect)
+  ## wb <- loadWorkbook("20140315descrdruck.xlsx")
+  wb <- loadWorkbook("201506descrdruck.xlsx")
+  createSheet(wb,name="stand")
+  writeWorksheet(wb,result,"stand")
+  saveWorkbook(wb)
+  
+#+END_SRC
+* Gruppenvergleiche
+#+BEGIN_SRC R :session
+  setwd("/media/mandy/Volume/transcend/vetmed/hagenjenny")
+  require(car)
+
+  res <- list()
+  res2 <- list()
+  # seite <- "links"
+
+  for(seite in c("links","rechts")){
+  ## seite <- "links"
+      
+    ## daten laden seite <- "links"
+    tt <- load("20140215morph.rdata") ## morph
+    tt <- load("20140215xray.rdata")  ## xray
+    tt <- load("20140209druckstand.rdata")
+    dstand <- x
+    tt <- load("20140209druckschritt.rdata")
+    dschr <- x
+    
+    ## variablen namen to lower case
+    
+    names(morph) <- tolower(names(morph))
+    names(xray) <- tolower(names(xray))
+    names(dstand) <- tolower(names(dstand))
+    names(dschr) <- tolower(names(dschr))
+    
+    for(i in 1:6){
+        name <- paste0("auff.med_",i)
+        dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+        name <- paste0("auff.sag_",i)
+        dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+        print(table(dschr[,paste0("auffussen_",i)]))
+    }
+    
+    
+    dstand$gm.s <- gsub("[^a-z]","",dstand$gm.s)
+    dstand$huf.s <- gsub("[^a-z]","",dstand$huf.s)
+    
+    dschr$gm.s <- gsub("[^a-z]","",dschr$gm.s)
+    dschr$huf.s <- gsub("[^a-z]","",dschr$huf.s)
+    
+    
+    morph <- morph[morph$huf==seite,]
+    xray <- xray[xray$huf==seite,]
+    dstand <- dstand[dstand$huf==seite,]
+    dschr <- dschr[dschr$huf==seite,]
+
+    for(col in names(morph)[5:ncol(morph)]){
+        tt <- aov(morph[morph$bearbeitung=="vor",col] ~ morph$gruppe[morph$bearbeitung=="vor"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "morph"
+        tt$bearbeitung <- "vor"
+        names(tt) <- gsub("morph.","",names(tt))
+        names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("morph",col))
+    }
+
+    for(col in names(morph)[5:ncol(morph)]){
+        tt <- aov(morph[morph$bearbeitung=="nach",col] ~ morph$gruppe[morph$bearbeitung=="nach"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "morph"
+        tt$bearbeitung <- "nach"
+        names(tt) <- gsub("morph.","",names(tt))
+        names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("morph",col))
+    }
+
+    
+    for(col in names(morph)[5:ncol(morph)]){
+        m.tmp <- split(morph[,c(col,"bearbeitung","gruppe")],morph$gruppe)
+        tt <- lapply(m.tmp,function(xx){
+            tt <- aov(xx[,col] ~ xx$bearbeitung)
+            tt <- as.data.frame(TukeyHSD(tt)[1])
+            tt$groups <- row.names(tt)
+            tt$var <- col
+            tt$huf <- seite
+            tt$tabelle <- "morph"
+            names(tt) <- gsub("morph.","",names(tt))
+            tt$gruppe <- unique(xx$gruppe)
+            tt$pval.shap.vor <- shapiro.test(xx[xx$bearbeitung=="vor",col])$p.value
+            tt$pval.shap.nach <- shapiro.test(xx[xx$bearbeitung=="nach",col])$p.value
+            tt$pval.wilk <- wilcox.test(xx[,col] ~ xx$bearbeitung)$p.value
+            return(tt)
+        })
+
+        tt <- Reduce(rbind,tt)
+        res2[[length(res2)+1]] <- tt
+        print(paste("morph",col))
+    }  
+
+    for(col in names(xray)[5:ncol(xray)]){
+        tt <- aov(xray[xray$bearbeitung=="vor",col] ~ xray$gruppe[xray$bearbeitung=="vor"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "xray"
+        tt$bearbeitung <- "vor"
+        names(tt) <- gsub("xray.","",names(tt))
+        names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("xray",col))
+    }
+
+      for(col in names(xray)[5:ncol(xray)]){
+        tt <- aov(xray[xray$bearbeitung=="nach",col] ~ xray$gruppe[xray$bearbeitung=="nach"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "xray"
+        tt$bearbeitung <- "nach"
+        names(tt) <- gsub("xray.","",names(tt))
+              names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("xray",col))
+    }
+
+    for(col in names(xray)[5:ncol(xray)]){
+        m.tmp <- split(xray[,c(col,"bearbeitung","gruppe")],xray$gruppe)
+        tt <- lapply(m.tmp,function(xx){
+            tt <- aov(xx[,col] ~ xx$bearbeitung)
+            tt <- as.data.frame(TukeyHSD(tt)[1])
+            tt$groups <- row.names(tt)
+            tt$var <- col
+            tt$huf <- seite
+            tt$tabelle <- "xray"
+            names(tt) <- gsub("morph.","",names(tt))
+            tt$gruppe <- unique(xx$gruppe)
+            tt$pval.shap.vor <- shapiro.test(xx[xx$bearbeitung=="vor",col])$p.value
+            tt$pval.shap.nach <- shapiro.test(xx[xx$bearbeitung=="nach",col])$p.value
+            tt$pval.wilk <- wilcox.test(xx[,col] ~ xx$bearbeitung)$p.value
+            return(tt)
+        })
+        
+        tt <- Reduce(rbind,tt)
+        res2[[length(res2)+1]] <- tt
+        print(paste("xray",col))
+    }
+    
+    for(col in names(dstand)[8:ncol(dstand)]){
+        tt <- aov(dstand[dstand$bearbeitung=="vor",col] ~ dstand$gruppe[dstand$bearbeitung=="vor"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "druckstand"
+        tt$bearbeitung <- "vor"
+        names(tt) <- gsub("dstand.","",names(tt))
+        names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("druckstand",col))
+    }
+
+      for(col in names(dstand)[8:ncol(dstand)]){
+          if(col %in% c("flaeche.zehe_6",
+                      "flaeche.seiten_6",
+                      "flaeche.trachten_6",
+                      "kraft.zehe_6",
+                      "kraft.seiten_6",
+                      "kraft.trachten_6")) next
+        tt <- aov(dstand[dstand$bearbeitung=="nach",col] ~ dstand$gruppe[dstand$bearbeitung=="nach"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "druckstand"
+        tt$bearbeitung <- "nach"
+        names(tt) <- gsub("dstand.","",names(tt))
+        names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("druckstand",col))
+      }
+
+    for(col in names(dstand)[8:ncol(dstand)]){
+        if(col %in% c("flaeche.zehe_6",
+                      "flaeche.seiten_6",
+                      "flaeche.trachten_6",
+                      "kraft.zehe_6",
+                      "kraft.seiten_6",
+                      "kraft.trachten_6")) next
+        m.tmp <- split(dstand[,c(col,"bearbeitung","gruppe")],dstand$gruppe)
+        tt <- lapply(m.tmp,function(xx){
+            tt <- aov(xx[,col] ~ xx$bearbeitung)
+            tt <- as.data.frame(TukeyHSD(tt)[1])
+            tt$groups <- row.names(tt)
+            tt$var <- col
+            tt$huf <- seite
+            tt$tabelle <- "druck stand"
+            names(tt) <- gsub("morph.","",names(tt))
+            tt$gruppe <- unique(xx$gruppe)
+            tt$pval.shap.vor <- shapiro.test(xx[xx$bearbeitung=="vor",col])$p.value
+            tt$pval.shap.nach <- shapiro.test(xx[xx$bearbeitung=="nach",col])$p.value
+            tt$pval.wilk <- wilcox.test(xx[,col] ~ xx$bearbeitung)$p.value
+            return(tt)
+        })
+
+        tt <- Reduce(rbind,tt)
+        res2[[length(res2)+1]] <- tt
+        print(paste("druckstand",col))
+    }
+    
+    cols <- names(dschr)[8:ncol(dschr)][!grepl("auff",names(dschr)[8:ncol(dschr)])]
+    for(col in cols){
+        tt <- aov(dschr[dschr$bearbeitung=="vor",col] ~ dschr$gruppe[dschr$bearbeitung=="vor"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "druckschritt"
+        tt$bearbeitung <- "vor"
+        names(tt) <- gsub("dschr.","",names(tt))
+        names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("druckschritt",col))
+    }
+
+    cols <- names(dschr)[8:ncol(dschr)][!grepl("auff",names(dschr)[8:ncol(dschr)])]
+    for(col in cols){
+        if(col %in% c("flaeche.zehe_6",
+                      "flaeche.seiten_6",
+                      "flaeche.trachten_6",
+                      "flaeche.ges_6",
+                      "kraft.zehe_6",
+                      "kraft.seiten_6",
+                      "kraft.trachten_6")) next
+        tt <- aov(dschr[dschr$bearbeitung=="nach",col] ~ dschr$gruppe[dschr$bearbeitung=="nach"])
+        tt <- as.data.frame(TukeyHSD(tt)[1])
+        tt$groups <- row.names(tt)
+        tt$var <- col
+        tt$huf <- seite
+        tt$tabelle <- "druckschritt"
+        tt$bearbeitung <- "nach"
+        names(tt) <- gsub("dschr.","",names(tt))
+              names(tt) <- gsub(".....vor...","",names(tt))
+        names(tt) <- gsub(".....nach...","",names(tt))
+        res[[length(res)+1]] <- tt
+        print(paste("druckschritt",col))
+    }
+    
+      for(col in cols){
+          if(col %in% c("flaeche.zehe_6",
+                        "flaeche.seiten_6",
+                        "flaeche.trachten_6",
+                        "flaeche.ges_6",
+                        "kraft.zehe_6",
+                        "kraft.seiten_6",
+                        "kraft.trachten_6")) next
+          m.tmp <- split(dschr[,c(col,"bearbeitung","gruppe")],dschr$gruppe)
+          tt <- lapply(m.tmp,function(xx){
+            tt <- aov(xx[,col] ~ xx$bearbeitung)
+            tt <- as.data.frame(TukeyHSD(tt)[1])
+            tt$groups <- row.names(tt)
+            tt$var <- col
+            tt$huf <- seite
+            tt$tabelle <- "druck schritt"
+            names(tt) <- gsub("morph.","",names(tt))
+            tt$gruppe <- unique(xx$gruppe)
+            tt$pval.shap.vor <- shapiro.test(xx[xx$bearbeitung=="vor",col])$p.value
+            tt$pval.shap.nach <- shapiro.test(xx[xx$bearbeitung=="nach",col])$p.value
+            tt$pval.wilk <- wilcox.test(xx[,col] ~ xx$bearbeitung)$p.value
+            return(tt)
+        })
+
+          tt <- Reduce(rbind,tt)
+          res2[[length(res2)+1]] <- tt
+          print(paste("druckschritt",col))
+        
+      }
+
+  }
+
+  res1 <- Reduce(rbind,res)
+  res2 <- Reduce(rbind,res2)
+
+  require(XLConnect)
+  wb <- loadWorkbook("20150707vergleiche.xlsx",create=T)
+  createSheet(wb,"gruppen")
+  writeWorksheet(wb,res1,"gruppen")
+  createSheet(wb,"bearb")
+  writeWorksheet(wb,res2,"bearb")
+  saveWorkbook(wb)
+    
+#+END_SRC
+
+* [2014-04-21 Mo] vgl Zeitpunkte
+#+BEGIN_SRC R :session
+  require(car)
+    
+  res <- list()
+  ## daten laden seite <- "links"
+  tt <- load("20140215morph.rdata") ## morph
+  tt <- load("20140215xray.rdata")  ## xray
+  tt <- load("20140209druckstand.rdata")
+  dstand <- x
+  tt <- load("20140209druckschritt.rdata")
+  
+  
+  require(reshape2)
+  xx <- melt(morph,id.vars = c("Gruppe","Tier","Huf","Bearbeitung"))
+  xx$mg <- gsub("_[1-6]$","",xx$variable)
+  xx$zp <- gsub(".+_","",xx$variable)
+  
+  xx <- melt(xray,id.vars = c("Gruppe","Tier","Huf","Bearbeitung"))
+  xx$mg <- gsub("_[1-6]$","",xx$variable)
+  xx$zp <- gsub(".+_","",xx$variable)
+  
+  ## druckstand
+  xx <- melt(x,id.vars = c("Gruppe","Tier","Huf","Bearbeitung","Bewegung","Huf.S","GM.S"))
+  xx$mg <- gsub("_[1-6]$","",xx$variable)
+  xx$zp <- gsub(".+_","",xx$variable)
+  xx <- xx[!(xx$mg %in% c("Flaeche.Seiten","Flaeche.Trachten","Flaeche.Zehe","Kraft.Seiten","Kraft.Trachten","Kraft.Zehe")),]
+  xx <- droplevels(xx)
+  
+  
+  ## druckschritt
+  xx <- melt(x,id.vars = c("Gruppe","Tier","Huf","Bearbeitung","Bewegung","Huf.S","GM.S"))
+  xx$mg <- gsub("_[1-6]$","",xx$variable)
+  xx$zp <- gsub(".+_","",xx$variable)
+  xx <- xx[!(xx$mg %in% c("Auffussen","Flaeche.ges","Flaeche.Seiten","Flaeche.Trachten","Flaeche.Zehe","Kraft.Seiten","Kraft.Trachten","Kraft.Zehe")),]
+  xx <- droplevels(xx)
+  
+  
+  hf <- function(x){
+      tt <- aov(x$value ~ x$zp)
+      tt <- as.data.frame(TukeyHSD(tt)[1])
+      tt$zeitpunkte <- row.names(tt)
+      tt$gruppe <- unique(x$Gruppe)
+      tt$hoof <- unique(x$Huf)
+      tt$Bearbeitung <- unique(x$Bearbeitung)
+      tt$mg <- unique(x$mg)
+      tt$Bewegung <- unique(x$Bewegung)
+      return(tt)
+  }
+  
+  xl <- split(xx,list(xx$Gruppe,xx$Huf,xx$Bearbeitung,xx$mg))
+  temp <- lapply(xl,hf)
+  res <- Reduce(rbind,temp)
+  
+  require(XLConnect)
+  wb <- loadWorkbook("201404results.xlsx",create=T)
+  createSheet(wb,"morph")
+  writeWorksheet(wb,res,"morph")
+  
+  createSheet(wb,"xray")
+  writeWorksheet(wb,res,"xray")
+  
+  createSheet(wb,"druckstand")
+  writeWorksheet(wb,res,"druckstand")
+  
+  createSheet(wb,"druckschritt")
+  writeWorksheet(wb,res,"druckschritt")
+  saveWorkbook(wb)
+  
+  
+  
+  xl <- split(xx,list(xx$Gruppe,xx$Huf,xx$Bearbeitung,xx$mg,xx$zp))
+  temp <- lapply(xl,function(x){if(nrow(x)==0){return(NA)};shapiro.test(x$value)$p.val})
+  res <- Reduce(rbind,temp)
+  
+  
+  for(seite in c("links","rechts")){
+      for(gr in c("A","B","C")){
+          for(be in c("vor","nach")){
+              for(mg in unique(gsub("_[1-6]","",names(morph)[5:ncol(morph)]))){
+                  x <- morph[morph$Huf==seite & morph$Gruppe==gr & morph$Bearbeitung==be,]
+                  for(i in 1:6){
+                      for(j in 1:6){
+                          if(i==j){next}
+                          res[length(res)+1] <- 
+                      }
+                  }
+              }
+          }
+      }
+  }
+#+END_SRC
+* [2014-04-23 Mi] Grafiken Einzelwerte
+#+BEGIN_SRC R :session
+  tt <- load("20140215morph.rdata") ## morph
+  
+  require(reshape2)
+  xx <- melt(morph,id.vars = c("Gruppe","Tier","Huf","Bearbeitung"))
+  xx$mg <- gsub("_[1-6]$","",xx$variable)
+  xx$zp <- as.numeric(gsub(".+_","",xx$variable))
+  
+  xx$zp2 <- ifelse(xx$Bearbeitung=="vor", xx$zp-0.01,xx$zp+0.01)
+  
+  tmp <- xx[xx$mg=="HR",]
+  
+  require(ggplot2)
+  
+  p <- ggplot(tmp,aes(x=zp2,colour=factor(Tier),y=value)) +
+      geom_line() +
+      geom_point(size=2.5) +
+      facet_grid(Huf~Gruppe) +
+      theme(
+          legend.position="none",
+          axis.title.x=element_blank()
+          )
+  
+  +
+      stat_summary(fun.y="mean2",geom="point",position=position_dodge(width=0.8)) +
+      stat_summary(aes(label=..y..),fun.y="mean2",geom="text",position=position_dodge(width=0.8),size=4,fontface=2,hjust=-0.5,angle=90) +
+      scale_fill_manual("",values = c("darkgreen","darkred")) +
+      theme_bw() +
+      theme(
+          legend.position="bottom",
+          axis.title.x=element_blank()
+          )
+    
+    require(plyr)
+    plots <- dlply(tmp,.(var),`%+%`,e1=p)
+    ml <- do.call(marrangeGrob, c(plots, list(nrow=1, ncol=1)))
+    
+    ggsave("20140315morph.pdf",ml,height=21,width=29.7,units="cm")
+#+END_SRC
+* [2014-05-18 So] ACHTUNG bissl durcheinander auffussen [2015-06-08 Mo] Grafiken bw
+#+BEGIN_SRC R :session
+  setwd("/media/mandy/Volume/transcend/vetmed/hagenjenny/")
+  require(ggplot2)
+  require(car)
+  detach("package:plyr")
+  require("dplyr")
+
+  p <- list()
+
+  for(seite in c("links","rechts")){
+
+  ## seite <- "links"
+  ## seite <- "rechts"
+      
+  ## daten laden
+  tt <- load("20140215morph.rdata") ## morph
+  tt <- load("20140215xray.rdata")  ## xray
+  tt <- load("20140209druckstand.rdata")
+  dstand <- x
+  tt <- load("20140209druckschritt.rdata")
+  dschr <- x
+
+  ## variablen namen to lower case
+
+  names(morph) <- tolower(names(morph))
+  names(xray) <- tolower(names(xray))
+  names(dstand) <- tolower(names(dstand))
+  names(dschr) <- tolower(names(dschr))
+
+  ## morph xray stand und schritt mergen
+
+  templ <- list()
+
+  morph <- morph[morph$huf==seite,]
+  xray <- xray[xray$huf==seite,]
+  dstand <- dstand[dstand$huf==seite,]
+  dschr <- dschr[dschr$huf==seite,]
+
+
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+      templ[[i]] <- as.data.frame(table(dschr[,paste0("auffussen_",i)],dschr$gruppe,dschr$bearbeitung))
+      templ[[i]]$zp <- i
+  #    print(table(dschr[,paste0("auffussen_",i)]))
+  }
+
+  tl <- Reduce(rbind,templ)
+  tl$Var3 <- relevel(tl$Var3,ref = 2)
+
+  tl$Var2 <- paste(tl$Var2,tl$zp)
+
+  tl$Var1 <- factor(tl$Var1,levels=1:9,labels=as.character(1:9))
+
+  tl$zp <- factor(tl$zp,levels = 1:6,labels=paste0("zp",1:6))
+
+  require(dplyr)
+
+  tl <- tl[!is.na(tl$Var1),]
+
+
+
+  tl <- tl %>%
+      group_by(Var2,Var3) %>%
+          arrange(Var1) %>%
+              mutate(cumsum=cumsum(Freq),
+                     cumsumstart=c(0,cumsum[-length(cumsum)])) 
+
+
+
+  mwidth <- 0.45
+
+  tl$x <- as.numeric(tl$Var3) - mwidth
+  tl$xend <- as.numeric(tl$Var3) + mwidth
+
+  tl$Var3 <- factor(tl$Var3,levels = c("vor","nach"),labels=c("before","after"))
+
+
+  texture <- tl[tl$zp==1,c("x","xend","cumsumstart","Var2")]
+
+  texture.hor <- Reduce(rbind,
+                        apply(tl[tl$Var1 %in% 1:3,],1,
+                              function(x) data.frame(
+                                  Var1=x[1],
+                                  Var2=x[2],
+                                  zp=x[5],
+                                  y=seq(as.numeric(x[7]),as.numeric(x[6]),by=0.4),
+                                  yend=seq(as.numeric(x[7]),as.numeric(x[6]),by=0.4),
+                                  x=as.numeric(x[8]),
+                                  xend=as.numeric(x[9]))))
+
+  texture.ver <- Reduce(rbind,
+                        apply(tl[tl$Var1 %in% 7:9,],1,
+                              function(x) data.frame(
+                                  Var1=x[1],
+                                  Var2=x[2],
+                                  zp=x[5],
+                                  y=as.numeric(x[6]),
+                                  yend=as.numeric(x[7]),
+                                  x=seq(as.numeric(x[8]),as.numeric(x[9]),by=0.05),
+                                  xend=seq(as.numeric(x[8]),as.numeric(x[9]),by=0.05))))
+
+
+
+  texture <- rbind(texture.ver,texture.hor)
+
+  tl <- tl %>% group_by(Var2,Var3) %>% mutate(groupsum=sum(Freq))
+  tl$percent <- round(tl$Freq / tl$groupsum,3) * 100
+
+
+  for(i in paste0("zp",1:6)){
+
+  p <- ggplot(tl[tl$zp==i & tl$Freq > 0,],aes(x=Var3,y=Freq,fill=Var1)) +
+      geom_bar(stat="identity",colour="black") +
+              scale_y_continuous(breaks=1:30) +
+      geom_text(aes(label=paste0(Var1,": n=",Freq),colour=Var1),
+                    position = "stack",vjust=1.2,fontface="bold",size=7) +
+      scale_fill_manual(limits=as.character(1:9),
+                        breaks=as.character(1:9),values = rep(c("grey90","grey10","grey50"),3)) +
+      geom_segment(inherit.aes=F,
+                   data=texture[texture$zp==i,],
+                   aes(x=x,
+                       xend=xend,
+                       y=y,
+                       yend=yend,
+                       colour=Var1),size=.25) +
+      scale_colour_manual(limits=as.character(1:9),
+                          breaks=as.character(1:9),values = rep(c("grey30","white","grey10"),3)) +
+      geom_bar(stat="identity",colour="black",fill="transparent") +
+      facet_grid(~Var2) +
+      theme_bw() +
+      xlab("trimming") +
+      ggtitle("left") +
+      theme(legend.position="none",
+            strip.background = element_blank(),
+            strip.text = element_text(size=12),
+            axis.text = element_text(size=12),
+            panel.grid = element_blank())
+
+  ggsave(paste0("abs",i,seite,".pdf"), plot=p, width=30, height=21,units="cm")
+  ggsave(paste0("abs",i,seite,".png"), plot=p, width=30, height=21,units="cm")
+
+  }
+
+
+  for(i in paste0("zp",1:6)){
+       p <- ggplot(tl[tl$zp==i & tl$Freq > 0,],aes(x=Var3,y=Freq,fill=Var1)) +
+            geom_bar(stat="identity",colour="black") +
+            scale_y_continuous(breaks=1:30) +
+                geom_text(aes(label=paste0(Var1,": ",percent,"%"),colour=Var1),
+            position = "stack",vjust=1.2,fontface="bold",size=7) +
+            scale_fill_manual(limits=as.character(1:9),
+            breaks=as.character(1:9),values = rep(c("grey90","grey10","grey50"),3)) +
+            geom_segment(inherit.aes=F,
+            data=texture[texture$zp==i,],
+            aes(x=x,
+                xend=xend,
+                y=y,
+                yend=yend,
+                colour=Var1),size=.25) +
+            scale_colour_manual(limits=as.character(1:9),
+                                breaks=as.character(1:9),values = rep(c("grey30","white","grey10"),3)) +
+            geom_bar(stat="identity",colour="black",fill="transparent") +
+       facet_grid(~Var2) +
+       theme_bw() +
+       xlab("trimming") +
+       ggtitle("left") +
+       theme(legend.position="none",
+             strip.background = element_blank(),
+             strip.text = element_text(size=12),
+             axis.text = element_text(size=12),
+             panel.grid = element_blank())
+    ggsave(paste0("perc",i,seite,".pdf"), plot=p, width=30, height=21,units="cm")
+   ggsave(paste0("perc",i,seite,".png"), plot=p, width=30, height=21,units="cm")
+   
+  }
+  }
+
+  df <- expand.grid(1:3,1:3)
+  df$fill <- c(7:9,4:6,1:3)
+
+  texture.hor <- data.frame(x=rep(c(0.5,1.5,2.5),each=11),
+                            xend=rep(c(1.5,2.5,3.5),each=11),
+                            y=rep(seq(2.5,3.5,by=0.1),3),
+                            yend=rep(seq(2.5,3.5,by=0.1),3),
+                            Var1=rep(1:3,each=11))
+
+
+  texture.ver <- data.frame(x=seq(0.5,3.5,by=0.1),
+                            xend=seq(0.5,3.5,by=0.1),
+                            y=rep(0.5,each=31),
+                            yend=rep(1.5,each=31),
+                            Var1=c(rep(7:9,each=10),9))
+
+
+
+  texture <- rbind(texture.hor,texture.ver)
+  texture$Var1 <- factor(texture$Var1,levels = c(7:9,4:6,1:3))
+
+  labels <- data.frame(x=rep(1:3,3),
+                       y=rep(1:3,each=3),
+                       Var1=factor(c(7:9,4:6,1:3)))
+
+
+  leg <- ggplot(df,aes(x=Var1,y=Var2,fill=factor(fill))) +
+      geom_raster() +
+      scale_fill_manual(breaks=1:9,values = rep(c("grey90","grey10","grey50"),3)) +
+      geom_segment(inherit.aes=F,
+                   data=texture,
+                   aes(x=x,y=y,xend=xend,yend=yend,colour=Var1)) +
+      scale_colour_manual(breaks=1:9,values = rep(c("grey30","white","grey10"),3)) +
+      geom_text(inherit.aes=F,data=labels,aes(x=x,y=y,label=Var1,colour=Var1),
+                size=12,
+                fontface="bold") +
+      geom_hline(yintercept=c(0.5,1.5,2.5,3.5))+
+      geom_vline(xintercept=c(0.5,1.5,2.5,3.5)) +
+      scale_x_continuous(expand=c(0,0)) +
+      scale_y_continuous(expand=c(0,0)) +
+      theme(panel.background=element_blank(),
+            plot.background=element_blank(),
+            axis.text=element_blank(),
+            axis.title=element_blank(),
+            axis.ticks=element_blank(),
+            legend.position="none"
+            )
+
+  ggsave("legend.png")
+
+  leg.grob <- ggplotGrob(leg)
+
+
+  require(plyr)
+  plots = dlply(tl , "zp", `%+%`, e1 = p)
+  ml = do.call(marrangeGrob, c(plots, list(nrow=2, ncol=1)))
+  ## ggsave(paste0("20140518auffussen",seite,".pdf"), ml,height=29.7,width=21,units="cm")
+
+  ggsave(paste0("201506auffussen",seite,".pdf"), ml,height=29.7,width=21,units="cm")
+
+
+
+
+
+  tl <- Reduce(rbind,templ)
+  tl$Var3 <- relevel(tl$Var3,ref = 2)
+         
+  tabanzahl <- reshape(tl[,c(1,2,3,4,5)],idvar = c("Var1","Var2","zp"),timevar=c("Var3"),direction = "wide")
+
+  names(tabanzahl)[1:3] <- c("Feld.auffusen","gruppe","zeitpunkt")
+  tabanzahl$seite <- seite
+         
+  wb <- loadWorkbook("20140518auffussentab.xlsx",create=T)
+  createSheet(wb,seite)
+  writeWorksheet(wb,tabanzahl,seite)
+  saveWorkbook(wb)
+
+     
+
+
+
+  names(xray) <- gsub("hb","hb.xray",names(xray))
+
+  mx <- merge(morph,xray)
+  mxstand <- merge(mx,dstand)
+  mxschr <- merge(mx,dschr)
+
+
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+  #    print(table(dschr[,paste0("auffussen_",i)]))
+  }
+
+
+  dstand$gm.s <- gsub("[^a-z]","",dstand$gm.s)
+  dstand$huf.s <- gsub("[^a-z]","",dstand$huf.s)
+
+  dschr$gm.s <- gsub("[^a-z]","",dschr$gm.s)
+  dschr$huf.s <- gsub("[^a-z]","",dschr$huf.s)
+
+
+  morph <- morph[morph$huf==seite,]
+  xray <- xray[xray$huf==seite,]
+  dstand <- dstand[dstand$huf==seite,]
+  dschr <- dschr[dschr$huf==seite,]
+
+  print(paste(seite,nrow(morph),nrow(xray),nrow(dstand),nrow(dschr)))
+
+  res <- list()
+
+  pr <- prs[[1]]
+  pr <- pr[pr$V1=="auffussen",]
+
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="auffussen"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          for(r in c("auff.med","auff.sag")){        
+              r <- paste(r,j,sep = "_")
+              mxschr[,r] <- factor(mxschr[,r])
+              unab <- relevel(mxschr[,r],ref=2)
+              if(!(var1 %in% names(mxschr))) {next}
+              tmp <- as.data.frame(summary.lm(lm(mxschr[,var1] ~ unab))$coefficients)
+              tmp$var1 <- var1
+              tmp$var2 <- r
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "morphxrayschritt"
+              res[[length(res)+1]] <- tmp
+              mxschr$ng <- paste(mxschr[,r],mxschr$bearbeitung)
+              p[[length(p)+1]] <- ggplot(mxschr[!is.na(mxschr[,r]),],aes_string(x=r,y=var1,fill="bearbeitung",group="ng")) +
+                  geom_boxplot() +
+                      stat_summary(fun.data=mean_cl_boot,colour="red",position=position_dodge(width = 0.8)) +
+                          stat_summary(aes(label=..y..),fun.y=mean2,colour="red",geom = "text",vjust = 1.1,position=position_dodge(width = 0.8),size=4) +
+                           stat_summary(fun.data=give.n,fun.y=min,colour="blue",geom = "text",vjust = 1.5,position=position_dodge(width = 0.8),size=4) +
+                            facet_grid(~gruppe) +
+                              theme_bw() +
+                                  ggtitle(seite) +                                
+                                  theme(
+                                      legend.position="bottom"
+                                      )
+          }
+      }
+  }
+
+  pr <- prs[[6]]
+  pr <- pr[pr$V1=="auffussen" & !grepl("gm.s|huf.s",pr$V2),]
+
+  for(i in 1:nrow(pr)){
+      for(j in 1:6){
+          if(pr$V1[i]=="auffussen"){
+              var1 <- pr$V2[i]
+          } else {
+              var1 <- pr$V1[i]
+          }
+          var1 <- paste(var1,j,sep = "_")
+          for(r in c("auff.med","auff.sag")){        
+              r <- paste(r,j,sep = "_")
+              dschr[,r] <- factor(dschr[,r])
+              unab <- relevel(dschr[,r],ref=2)
+              if(!(var1 %in% names(dschr))) {next}
+              tmp <- as.data.frame(summary.lm(lm(dschr[,var1] ~ unab))$coefficients)
+              tmp$var1 <- var1
+              tmp$var2 <- r
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "morphxrayschritt"
+              res[[length(res)+1]] <- tmp
+              dschr$ng <- paste(dschr[,r],dschr$bearbeitung)
+      p[[length(p)+1]] <- ggplot(dschr[!is.na(dschr[,r]),],aes_string(x=r,y=var1,fill="bearbeitung",group="ng")) +
+      geom_boxplot() +
+      stat_summary(fun.data=mean_cl_boot,colour="red",position=position_dodge(width = 0.8)) +
+      stat_summary(aes(label=..y..),fun.y=mean2,colour="black",geom = "text",vjust = -0.5,position=position_dodge(width = 0.8),size=4) +
+      stat_summary(fun.data=give.n,fun.y=min,colour="blue",geom = "text",vjust = 1.5,position=position_dodge(width = 0.8),size=4) +
+      facet_grid(~gruppe) +
+      theme_bw() +
+      ggtitle(seite) +                                
+      theme(
+          legend.position="bottom"
+          )
+          }
+      }
+  }
+
+  if(seite=="links"){
+      reslinks <- Reduce(rbind,res)
+      reslinks$huf <- seite
+      reslinks$var <- row.names(reslinks)
+  }
+
+  if(seite=="rechts"){
+      resrechts <- Reduce(rbind,res)
+      resrechts$huf <- seite
+      resrechts$var <- row.names(resrechts)
+  }
+
+
+  }
+
+  res <- rbind(resrechts,reslinks)
+
+  require(gridExtra)
+  ml <- do.call(marrangeGrob, c(p, list(nrow=2, ncol=1)))
+  ggsave("20140518auffussenrl.pdf",ml,height=29.7,width=21,units="cm")
+    
+  require(XLConnect)
+  wb <- loadWorkbook("20140518auffussenrl.xlsx",create=T)
+  createSheet(wb,"res")
+  writeWorksheet(wb,res,"res")
+  saveWorkbook(wb)
+
+
+  dschr$ng <- paste(dschr[,r],dschr$bearbeitung)
+
+  ggplot(dschr[!is.na(dschr[,r]),],aes_string(x=r,y=var1,fill="bearbeitung",group="ng")) +
+      geom_boxplot() +
+      stat_summary(fun.data=mean_cl_boot,colour="red",position=position_dodge(width = 0.8)) +
+      stat_summary(aes(label=..y..),fun.y=mean2,colour="black",geom = "text",vjust = -0.5,position=position_dodge(width = 0.8),size=4) +
+      stat_summary(fun.data=give.n,fun.y=min,colour="blue",geom = "text",vjust = 1.5,position=position_dodge(width = 0.8),size=4) +
+      facet_grid(~gruppe) +
+      theme_bw() +
+      ggtitle(seite) +                                
+      theme(
+          legend.position="bottom"
+          )
+
+  give.n <- function(x){
+    return(c(y = min(x), label = length(x)))
+    # experiment with the multiplier to find the perfect position
+  }
+
+#+END_SRC
+* [2014-05-18 So] auffussen gms
+#+BEGIN_SRC R :session
+
+
+#+END_SRC
