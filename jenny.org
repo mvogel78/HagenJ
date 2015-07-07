@@ -1960,7 +1960,7 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
   saveWorkbook(wb)
   
 #+END_SRC
-* Gruppenvergleiche
+* [2015-07-07 Di] Gruppenvergleiche
 #+BEGIN_SRC R :session
   setwd("/media/mandy/Volume/transcend/vetmed/hagenjenny")
   require(car)
