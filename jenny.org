@@ -1245,19 +1245,19 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
   load("20140209druckschritt.rdata")
   require(car)
   mean2 <- function(x){round(mean(x,na.rm = T),2)}
-  
-  
+
+
   cor.test(x$Auffussen_1,x$DV.med_1,method = "spearman")
   cor.test(x$Auffussen_1,x$DV.lat_1,method = "spearman")
   cor.test(x$Auffussen_1,x$DV.lat_1,method = "spearman")
-  
+
   ## paare laden
   tt <- load("20140309korrpaare.rdata")
-  
+
   p <- list()
-  
+
   for(seite in c("links","rechts")){
-  
+
   ## daten laden
   tt <- load("20140215morph.rdata") ## morph
   tt <- load("20140215xray.rdata")  ## xray
@@ -1265,14 +1265,14 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
   dstand <- x
   tt <- load("20140209druckschritt.rdata")
   dschr <- x
-  
+
   ## variablen namen to lower case
-  
+
   names(morph) <- tolower(names(morph))
   names(xray) <- tolower(names(xray))
   names(dstand) <- tolower(names(dstand))
   names(dschr) <- tolower(names(dschr))
-  
+
   for(i in 1:6){
       name <- paste0("auff.med_",i)
       dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
@@ -1280,28 +1280,28 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
       dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
       print(table(dschr[,paste0("auffussen_",i)]))
   }
-  
-  
+
+
   dstand$gm.s <- gsub("[^a-z]","",dstand$gm.s)
   dstand$huf.s <- gsub("[^a-z]","",dstand$huf.s)
-  
+
   dschr$gm.s <- gsub("[^a-z]","",dschr$gm.s)
   dschr$huf.s <- gsub("[^a-z]","",dschr$huf.s)
-  
-  
+
+
   morph <- morph[morph$huf==seite,]
   xray <- xray[xray$huf==seite,]
   dstand <- dstand[dstand$huf==seite,]
   dschr <- dschr[dschr$huf==seite,]
-  
+
   ## Varianzanalyse gm.s dschr
   pr <- prs[[6]]
   pr <- pr[pr$V1!="auffussen" & pr$V2=="gm.s",]
-  
+
   require(ggplot2)
-  
+
   res <- list()
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           var1 <- paste(pr$V1[i],j,sep = "_")
@@ -1323,10 +1323,10 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
+
   pr <- prs[[6]]
   pr <- pr[pr$V1=="auffussen" & pr$V2=="gm.s",]
-  
+
   for(i in 1:nrow(pr)){
       for(r in c("auff.med","auff.sag")){
           for(j in 1:6){
@@ -1350,14 +1350,14 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
           }
       }
   }
-  
-  
+
+
   ## Varianzanalyse huf.s dschr
   pr <- prs[[6]]
   pr <- pr[pr$V1!="auffussen" & pr$V2=="huf.s",]
-  
+
   require(ggplot2)
-  
+
   for(i in 1:nrow(pr)){
       for(r in c("auff.med","auff.sag")){
           for(j in 1:6){
@@ -1381,12 +1381,12 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
           }
       }
   }
-  
-  
+
+
   ## Varianzanalyse gm.s dstand
   pr <- prs[[5]]
   pr <- pr[pr$V1!="auffussen" & pr$V2=="gm.s",]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           var1 <- paste(pr$V1[i],j,sep = "_")
@@ -1408,12 +1408,12 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
-  
+
+
   ## Varianzanalyse huf.s dstand
   pr <- prs[[5]]
   pr <- pr[pr$V1!="auffussen" & pr$V2=="huf.s",]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           var1 <- paste(pr$V1[i],j,sep = "_")
@@ -1435,18 +1435,18 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
+
   ## morph xray stand und schritt mergen
   names(xray) <- gsub("hb","hb.xray",names(xray))
-  
+
   mx <- merge(morph,xray)
   mxstand <- merge(mx,dstand)
   mxschr <- merge(mx,dschr)
-  
+
   ## morph xray stand 
   pr <- prs[[2]]
   pr <- pr[(pr$V1!="auffussen" & pr$V2=="huf.s") | (pr$V2!="auffussen" & pr$V1=="huf.s"),]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           if(pr$V1[i]=="huf.s"){
@@ -1473,11 +1473,11 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
-  
+
+
   pr <- prs[[2]]
   pr <- pr[(pr$V1!="auffussen" & pr$V2=="gm.s") | (pr$V2!="auffussen" & pr$V1=="gm.s"),]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           if(pr$V1[i]=="gm.s"){
@@ -1504,12 +1504,12 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
-  
+
+
   ## morph xray schritt
   pr <- prs[[1]]
   pr <- pr[(pr$V1!="auffussen" & pr$V2=="huf.s") | (pr$V2!="auffussen" & pr$V1=="huf.s"),]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           if(pr$V1[i]=="huf.s"){
@@ -1536,11 +1536,11 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
-  
+
+
   pr <- prs[[1]]
   pr <- pr[(pr$V1!="auffussen" & pr$V2=="gm.s") | (pr$V2!="auffussen" & pr$V1=="gm.s"),]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           if(pr$V1[i]=="gm.s"){
@@ -1567,69 +1567,69 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                   )
       }
   }
-  
-  
-  
-  
+
+
+
+
   ## zusammen
-  
+
   if(seite=="links"){
       reslinks <- Reduce(rbind,res)
       reslinks$huf <- seite
       reslinks$var <- row.names(reslinks)
   }
-  
+
   if(seite=="rechts"){
       resrechts <- Reduce(rbind,res)
       resrechts$huf <- seite
       resrechts$var <- row.names(resrechts)
   }
-  
-  
+
+
   }
-  
+
   res <- rbind(reslinks,resrechts)
-  
+
   require(gridExtra)
   ml <- do.call(marrangeGrob, c(p, list(nrow=2, ncol=2)))
   ggsave("20140407gmshufslr.pdf",ml,height=21,width=29.7,units="cm")
-  
+
    require(XLConnect)
   wb <- loadWorkbook("20140407varangmshufsrl.xlsx",create=T)
   createSheet(wb,"res")
   writeWorksheet(wb,res,"res")
   saveWorkbook(wb)
-  
+
   ## nicht geeignet
   require(ICC)
   ICCbare(gm.s,dv.lat_2,data = dschr)
-  
+
   lstable(x$auff.med_1,x$GM.S)
   table(x$auff.sag_1,x$GM.S)
-  
+
   require(vcd)
   mosaic(table(factor(x$auff.sag_1),x$GM.S,dnn = list("auf.sag","gm.s")),shade=T,legend=T)
   mosaic(table(factor(x$auff.sag_1),x$GM.S,dnn = list("auf.sag","gm.s")),shade=T,legend=T)
-  
+
   for(i in 1:6){
       bearb <- "nach"
       mosaic(table(factor(x[x$Bearbeitung==bearb,paste0("auff.sag_",i)]),factor(x[x$Bearbeitung==bearb,paste0("auff.med_",i)]),dnn = list("Auffussen sagittal","Auffussen medial")),shade=T,legend=T)
       savePlot(paste0("mosaicauffussen_",bearb,"_",i,".png"))
   }
-  
+
   ## nochmal mit Gruppe
   for(i in 1:6){
       bearb <- "nach"
       mosaic(table(x$Gruppe[x$Bearbeitung==bearb],factor(x[x$Bearbeitung==bearb,paste0("auff.sag_",i)]),factor(x[x$Bearbeitung==bearb,paste0("auff.med_",i)]),dnn = list("Gruppe","Auffussen sagittal","Auffussen medial")),shade=T,legend=T)
       savePlot(paste0("mosaicauffussenmitgruppe_",bearb,"_",i,".png"))
   }
-  
+
   ## auffussen
-  
+
   p <- list()
-  
+
   for(seite in c("links","rechts")){
-  
+
   ## daten laden
   tt <- load("20140215morph.rdata") ## morph
   tt <- load("20140215xray.rdata")  ## xray
@@ -1637,16 +1637,16 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
   dstand <- x
   tt <- load("20140209druckschritt.rdata")
   dschr <- x
-  
+
   ## variablen namen to lower case
-  
+
   names(morph) <- tolower(names(morph))
   names(xray) <- tolower(names(xray))
   names(dstand) <- tolower(names(dstand))
   names(dschr) <- tolower(names(dschr))
-  
+
   ## morph xray stand und schritt mergen
-  
+
   for(i in 1:6){
       name <- paste0("auff.med_",i)
       dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
@@ -1654,15 +1654,15 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
       dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
       print(table(dschr[,paste0("auffussen_",i)]))
   }
-  
-  
+
+
   names(xray) <- gsub("hb","hb.xray",names(xray))
-  
+
   mx <- merge(morph,xray)
   mxstand <- merge(mx,dstand)
   mxschr <- merge(mx,dschr)
-  
-  
+
+
   for(i in 1:6){
       name <- paste0("auff.med_",i)
       dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
@@ -1670,27 +1670,27 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
       dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
   #    print(table(dschr[,paste0("auffussen_",i)]))
   }
-  
-  
+
+
   dstand$gm.s <- gsub("[^a-z]","",dstand$gm.s)
   dstand$huf.s <- gsub("[^a-z]","",dstand$huf.s)
-  
+
   dschr$gm.s <- gsub("[^a-z]","",dschr$gm.s)
   dschr$huf.s <- gsub("[^a-z]","",dschr$huf.s)
-  
-  
+
+
   morph <- morph[morph$huf==seite,]
   xray <- xray[xray$huf==seite,]
   dstand <- dstand[dstand$huf==seite,]
   dschr <- dschr[dschr$huf==seite,]
-  
+
   print(paste(seite,nrow(morph),nrow(xray),nrow(dstand),nrow(dschr)))
-  
+
   res <- list()
-  
+
   pr <- prs[[1]]
   pr <- pr[pr$V1=="auffussen",]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           if(pr$V1[i]=="auffussen"){
@@ -1722,10 +1722,10 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
           }
       }
   }
-  
+
   pr <- prs[[6]]
   pr <- pr[pr$V1=="auffussen" & !grepl("gm.s|huf.s",pr$V2),]
-  
+
   for(i in 1:nrow(pr)){
       for(j in 1:6){
           if(pr$V1[i]=="auffussen"){
@@ -1757,34 +1757,34 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
           }
       }
   }
-  
+
   if(seite=="links"){
       reslinks <- Reduce(rbind,res)
       reslinks$huf <- seite
       reslinks$var <- row.names(reslinks)
   }
-  
+
   if(seite=="rechts"){
       resrechts <- Reduce(rbind,res)
       resrechts$huf <- seite
       resrechts$var <- row.names(resrechts)
   }
-  
-  
+
+
   }
-  
+
   res <- rbind(resrechts,reslinks)
-  
+
   require(gridExtra)
   ml <- do.call(marrangeGrob, c(p, list(nrow=2, ncol=2)))
   ggsave("20140406auffussenrl.pdf",ml,height=21,width=29.7,units="cm")
-  
+
   require(XLConnect)
   wb <- loadWorkbook("20140406auffussenrl.xlsx",create=T)
   createSheet(wb,"res")
   writeWorksheet(wb,res,"res")
   saveWorkbook(wb)
-  
+
 #+END_SRC
 * [2014-03-15 Sa] descriptives druck
 #+BEGIN_SRC R :session
@@ -2813,6 +2813,62 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
 #+END_SRC
 * [2014-05-18 So] auffussen gms
 #+BEGIN_SRC R :session
+
+
+#+END_SRC
+* [2015-07-25 Sa] ber könntest du die Korrelationsberechnung wie in der Tabelle zwischen Auffußen und Druckverteilung nochmal für Auffußen und die Lage.CoF.ap ,Lage.CoF.ml und Abrollpunkt nur für die erste Messung, alle Pferde zusammen (nicht nach Gruppen sortiert), vor der Bearbeitung, machen?
+#+BEGIN_SRC R :session
+  tt <- load("20140215morph.rdata") ## morph
+  tt <- load("20140215xray.rdata")  ## xray
+  tt <- load("20140209druckstand.rdata")
+  dstand <- x
+  tt <- load("20140209druckschritt.rdata")
+  dschr <- x
+
+  ## variablen namen to lower case
+
+  names(morph) <- tolower(names(morph))
+  names(xray) <- tolower(names(xray))
+  names(dstand) <- tolower(names(dstand))
+  names(dschr) <- tolower(names(dschr))
+
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      dschr[,name] <- recode(dschr[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+      print(table(dschr[,paste0("auffussen_",i)]))
+  }
+
+
+  res <- list()
+
+  for(seite in c("links","rechts")){
+      for(r in c("auff.med","auff.sag")){
+          for(j in c(1,6)){
+              var1 <- paste(r,j,sep = "_")
+              if(!(var1 %in% names(dschr))) {next}
+              var2 <- paste("lage.cof.ap",j,sep = "_")
+              mm <- summary.lm(lm(dschr[,var2] ~ dschr[,var1] - 1))
+              tmp <- as.data.frame(mm$coefficients)
+              tmp$r <- sqrt(mm$r.squared)
+              tmp$var1 <- var1
+              tmp$var2 <- var2
+              tmp$zeitpunkt <- j
+              tmp$tabelle <- "druckschritt"
+              res[[length(res)+1]] <- tmp
+
+              p[[length(p)+1]] <- ggplot(dschr,aes_string(x=var1,y=var2,fill)) +
+                  geom_point(notch = T) +
+                      geom_smooth(method = "lm") +
+                          theme_bw() +
+                              ggtitle(seite) +                                
+                                  theme(
+                                      legend.position="none"
+                                  )
+          }
+      }
+  }
 
 
 #+END_SRC
