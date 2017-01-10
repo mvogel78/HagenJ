@@ -2396,6 +2396,20 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
 * [2014-05-18 So] ACHTUNG bissl durcheinander auffussen [2015-06-08 Mo] Grafiken bw
 #+BEGIN_SRC R :session
   setwd("/media/mandy/Volume/transcend/vetmed/hagenjenny/")
+  mytheme <- theme(legend.position="none",
+                   strip.background = element_blank(),
+                   strip.text = element_text(size=12),
+                   axis.text = element_text(size=12),
+                   panel.grid = element_blank(),
+                   axis.text.y = element_blank(),
+                   axis.ticks = element_blank(),
+                   axis.title.y = element_blank(),
+                   panel.border = element_rect(colour = "white"),
+                   panel.margin = unit(0,"cm")
+  )
+
+  plistneu <- list()
+
   require(ggplot2)
   require(car)
   detach("package:plyr")
@@ -2403,6 +2417,7 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
 
   p <- list()
 
+  plotneu <- list()
   for(seite in c("links","rechts")){
 
   ## seite <- "links"
@@ -2505,14 +2520,20 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
   tl <- tl %>% group_by(Var2,Var3) %>% mutate(groupsum=sum(Freq))
   tl$percent <- round(tl$Freq / tl$groupsum,3) * 100
 
+  ## (1-lateral toe, 2-medial toe, 3-central toe,
+  ## 4-medial side, 5-lateral side, 6-flat, 7-lateral heel, 8-heels, 9–medial heel)
+
+   
+  tl$Var1label <- recode(tl$Var1,c("1 = 'lateral toe';2 = 'medial toe'; 3='central toe';4='medial side';5='lateral side';6='flat';7='lateral heel';8='heels';9='medial heel'"))
+
 
   for(i in paste0("zp",1:6)){
 
   p <- ggplot(tl[tl$zp==i & tl$Freq > 0,],aes(x=Var3,y=Freq,fill=Var1)) +
       geom_bar(stat="identity",colour="black") +
               scale_y_continuous(breaks=1:30) +
-      geom_text(aes(label=paste0(Var1,": n=",Freq),colour=Var1),
-                    position = "stack",vjust=1.2,fontface="bold",size=7) +
+      geom_text(aes(label=paste0(Var1label,": n=",Freq),colour=Var1),
+                    position = "stack",vjust=1.2,fontface="bold",size=4) +
       scale_fill_manual(limits=as.character(1:9),
                         breaks=as.character(1:9),values = rep(c("grey90","grey10","grey50"),3)) +
       geom_segment(inherit.aes=F,
@@ -2528,15 +2549,13 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
       facet_grid(~Var2) +
       theme_bw() +
       xlab("trimming") +
-      ggtitle("left") +
-      theme(legend.position="none",
-            strip.background = element_blank(),
-            strip.text = element_text(size=12),
-            axis.text = element_text(size=12),
-            panel.grid = element_blank())
+      ggtitle("left") + mytheme
 
-  ggsave(paste0("abs",i,seite,".pdf"), plot=p, width=30, height=21,units="cm")
-  ggsave(paste0("abs",i,seite,".png"), plot=p, width=30, height=21,units="cm")
+
+  ggsave(paste0("neuabs",i,seite,".pdf"), plot=p, width=30, height=21,units="cm")
+  ggsave(paste0("neuabs",i,seite,".png"), plot=p, width=30, height=21,units="cm")
+
+  plistneu[[length(plistneu) + 1]] <- p
 
   }
 
@@ -2545,8 +2564,8 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
        p <- ggplot(tl[tl$zp==i & tl$Freq > 0,],aes(x=Var3,y=Freq,fill=Var1)) +
             geom_bar(stat="identity",colour="black") +
             scale_y_continuous(breaks=1:30) +
-                geom_text(aes(label=paste0(Var1,": ",percent,"%"),colour=Var1),
-            position = "stack",vjust=1.2,fontface="bold",size=7) +
+                geom_text(aes(label=paste0(Var1label,":",percent,"%"),colour=Var1),
+            position = "stack",vjust=1.2,fontface="bold",size=5) +
             scale_fill_manual(limits=as.character(1:9),
             breaks=as.character(1:9),values = rep(c("grey90","grey10","grey50"),3)) +
             geom_segment(inherit.aes=F,
@@ -2562,17 +2581,17 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
        facet_grid(~Var2) +
        theme_bw() +
        xlab("trimming") +
-       ggtitle("left") +
-       theme(legend.position="none",
-             strip.background = element_blank(),
-             strip.text = element_text(size=12),
-             axis.text = element_text(size=12),
-             panel.grid = element_blank())
-    ggsave(paste0("perc",i,seite,".pdf"), plot=p, width=30, height=21,units="cm")
-   ggsave(paste0("perc",i,seite,".png"), plot=p, width=30, height=21,units="cm")
+       ggtitle("left") + mytheme
+       plistneu[[length(plistneu) + 1]] <- p
+       
+       ggsave(paste0("neuperc",i,seite,".pdf"), plot=p, width=35, height=21,units="cm")
+       ggsave(paste0("neuperc",i,seite,".png"), plot=p, width=35, height=21,units="cm")
    
   }
   }
+
+
+
 
   df <- expand.grid(1:3,1:3)
   df$fill <- c(7:9,4:6,1:3)
@@ -2599,6 +2618,8 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                        y=rep(1:3,each=3),
                        Var1=factor(c(7:9,4:6,1:3)))
 
+  labels$Var1label <- recode(labels$Var1,c("1 = 'lateral toe';2 = 'medial toe'; 3='central toe';4='medial side';5='lateral side';6='flat';7='lateral heel';8='heels';9='medial heel'"))
+
 
   leg <- ggplot(df,aes(x=Var1,y=Var2,fill=factor(fill))) +
       geom_raster() +
@@ -2607,25 +2628,19 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
                    data=texture,
                    aes(x=x,y=y,xend=xend,yend=yend,colour=Var1)) +
       scale_colour_manual(breaks=1:9,values = rep(c("grey30","white","grey10"),3)) +
-      geom_text(inherit.aes=F,data=labels,aes(x=x,y=y,label=Var1,colour=Var1),
-                size=12,
+      geom_text(inherit.aes=F,data=labels,aes(x=x,y=y,label=Var1label,colour=Var1),
+                size=5,
                 fontface="bold") +
       geom_hline(yintercept=c(0.5,1.5,2.5,3.5))+
       geom_vline(xintercept=c(0.5,1.5,2.5,3.5)) +
       scale_x_continuous(expand=c(0,0)) +
-      scale_y_continuous(expand=c(0,0)) +
-      theme(panel.background=element_blank(),
-            plot.background=element_blank(),
-            axis.text=element_blank(),
-            axis.title=element_blank(),
-            axis.ticks=element_blank(),
-            legend.position="none"
-            )
+      scale_y_continuous(expand=c(0,0)) + mytheme
 
-  ggsave("legend.png")
+
+  ggsave("legendneu.png", plot = leg, width = 4, height = 4)
 
   leg.grob <- ggplotGrob(leg)
-
+  require(gridExtra)
 
   require(plyr)
   plots = dlply(tl , "zp", `%+%`, e1 = p)
@@ -2818,6 +2833,8 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
 #+END_SRC
 * [2015-07-25 Sa] ber könntest du die Korrelationsberechnung wie in der Tabelle zwischen Auffußen und Druckverteilung nochmal für Auffußen und die Lage.CoF.ap ,Lage.CoF.ml und Abrollpunkt nur für die erste Messung, alle Pferde zusammen (nicht nach Gruppen sortiert), vor der Bearbeitung, machen?
 #+BEGIN_SRC R :session
+  require(ggplot2)
+
   tt <- load("20140215morph.rdata") ## morph
   tt <- load("20140215xray.rdata")  ## xray
   tt <- load("20140209druckstand.rdata")
@@ -2840,35 +2857,312 @@ Von denen die du liegen hast, bräuchten wir zuerst von allen Pferden unabhängi
       print(table(dschr[,paste0("auffussen_",i)]))
   }
 
+  dschr <- dschr[dschr$bearbeitung == "vor",]
 
   res <- list()
 
-  for(seite in c("links","rechts")){
-      for(r in c("auff.med","auff.sag")){
-          for(j in c(1,6)){
-              var1 <- paste(r,j,sep = "_")
-              if(!(var1 %in% names(dschr))) {next}
-              var2 <- paste("lage.cof.ap",j,sep = "_")
-              mm <- summary.lm(lm(dschr[,var2] ~ dschr[,var1] - 1))
-              tmp <- as.data.frame(mm$coefficients)
-              tmp$r <- sqrt(mm$r.squared)
-              tmp$var1 <- var1
-              tmp$var2 <- var2
-              tmp$zeitpunkt <- j
-              tmp$tabelle <- "druckschritt"
-              res[[length(res)+1]] <- tmp
+  for(mg in c("lage.cof.ap","lage.cof.ml","abrollpunkt")){
+      for(seite in c("links","rechts")){
+          tmp.data <- dschr[dschr$huf == seite,]
+          for(r in c("auff.med","auff.sag")){
+              for(j in c(1,6)){
+                  var1 <- paste(r,j,sep = "_")
+                  if(!(var1 %in% names(dschr))) {next}
+                  var2 <- paste(mg,j,sep = "_")
+                  mm <- summary.lm(lm(tmp.data[,var2] ~ tmp.data[,var1]))
+                  tmp <- as.data.frame(mm$coefficients)[2,]
+                  tmp$r <- sqrt(mm$r.squared)
+                  tmp$rsquared <- mm$r.squared
+                  tmp$pvalf <- 1 - pf(mm$fstatistic[1],mm$fstatistic[2],mm$fstatistic[3])
+                  tmp$var1 <- var1
+                  tmp$var2 <- var2
+                  tmp$seite <- seite
+                  tmp$bearbeitung <- "vor"
+                  tmp$zeitpunkt <- j
+                  tmp$tabelle <- "druckschritt"
+                  res[[length(res)+1]] <- tmp
 
-              p[[length(p)+1]] <- ggplot(dschr,aes_string(x=var1,y=var2,fill)) +
-                  geom_point(notch = T) +
-                      geom_smooth(method = "lm") +
-                          theme_bw() +
-                              ggtitle(seite) +                                
-                                  theme(
-                                      legend.position="none"
-                                  )
+                  if(seite == "links"){
+                      p <- ggplot(dschr,aes_string(x=var1,y=var2,color="huf")) +
+                          geom_jitter() +
+                              geom_smooth(method = "lm") +
+                                  scale_color_manual(values = c("red","black")) +
+                                      theme_bw()
+                      ggsave(paste0("201511",var2,"_",var1,".png"))
+                      
+                  }
+              }
           }
       }
+
+  }
+
+  res <- Reduce(rbind,res)
+
+  require(XLConnect)
+  wb <- loadWorkbook("201507korr.xlsx",create=T)
+  createSheet(wb,"res")
+  writeWorksheet(wb,res,"res")
+  saveWorkbook(wb)
+#+END_SRC
+* [2015-11-04 Mi] manova fuer gutachter
+#+BEGIN_SRC R :session
+  load("20140209druckschritt.rdata")
+  require(car)
+
+  names(x) <- tolower(names(x))
+
+  for(i in 1:6){
+      name <- paste0("auff.med_",i)
+      x[,name] <- recode(x[,paste0("auffussen_",i)],"c(1,5,8)=-1;c(3,6,9)=0;c(2,4,7)=1")
+      name <- paste0("auff.sag_",i)
+      x[,name] <- recode(x[,paste0("auffussen_",i)],"1:3=1;4:6=0;7:9=-1")
+      print(table(x[,paste0("auffussen_",i)]))
   }
 
 
+  names(x)[grep("Auffussen|Lage.Cof.ap|Lage.Cof.ml",names(x),ignore.case = T)]
+
+  zp1 <- x[,c("gruppe","tier","huf","bearbeitung",names(x)[grep("Auffussen.*_1|Lage.Cof.ap.*_1|Lage.Cof.ml_1|auff.med_1|auff.sag_1",names(x),ignore.case = T)])]
+
+  zp1 <- reshape(zp1,
+                 idvar = c("gruppe","tier","huf"),
+                 timevar = "bearbeitung",
+                 direction = "wide")
+
+
+  zp1$diff.l.ap <- zp1$lage.cof.ap_1.nach - zp1$lage.cof.ap_1.vor
+  zp1$diff.l.ml <- zp1$lage.cof.ml_1.nach - zp1$lage.cof.ml_1.vor
+  zp1$diff.auff.med <- zp1$auff.med_1.nach - zp1$auff.med_1.vor
+  zp1$diff.auff.sag <- zp1$auff.sag_1.nach - zp1$auff.sag_1.vor
+
+  cor.test(zp1$diff.l.ap,zp1$diff.l.ml)
+
+  zp1.l <- split(zp1,list(zp1$gruppe,zp1$huf))
+
+
+  hf <- function(x,col1,col2){
+      temp <- cor.test(x[,col1],x[,col2],method = "spearman")
+      data.frame(
+          col1 = col1,
+          col2 = col2,
+          gruppe = x$gruppe[1],
+          huf = x$huf[1],
+          corr = temp$estimate,
+          pval = temp$p.value)}
+
+  cortests1vn <- rbind(
+      Reduce(rbind,lapply(zp1.l, function(x) hf(x,"diff.l.ap","diff.l.ml"))),
+      Reduce(rbind,lapply(zp1.l, function(x) hf(x,"diff.l.ap","diff.auff.sag"))),
+      Reduce(rbind,lapply(zp1.l, function(x) hf(x,"diff.l.ap","diff.auff.med"))),
+      Reduce(rbind,lapply(zp1.l, function(x) hf(x,"diff.auff.sag","diff.auff.med"))),
+      Reduce(rbind,lapply(zp1.l, function(x) hf(x,"diff.l.ml","diff.auff.sag"))),
+      Reduce(rbind,lapply(zp1.l, function(x) hf(x,"diff.l.ml","diff.auff.med")))
+  )
+
+
+  cortests1vn$adj.p <- p.adjust(cortests1vn$pval,method = "fdr")
+  cortests1vn$pval <- NULL
+
+
+  hf2 <- function(x){
+      temp <- chisq.test(cbind(x$auffussen_1.vor,x$auffussen_1.nach))
+      temp$p.value
+  }
+
+
+  hf2 <- function(x){
+      temp <- fisher.test(cbind(x$auffussen_1.vor,x$auffussen_1.nach))
+      temp$p.value
+  }
+
+  lapply(zp1.l,hf2)
+
+
+  ##
+
+  zp16 <- x[,c("gruppe","tier","huf","bearbeitung",names(x)[grep("Auffussen.*_[16]|Lage.Cof.ap.*_[16]|Lage.Cof.ml_[16]|auff.med_[16]|auff.sag_[16]",names(x),ignore.case = T)])]
+
+  zp16 <- zp16[zp16$bearbeitung == "vor",]
+
+
+  zp16$diff.l.ap <- zp16$lage.cof.ap_6 - zp16$lage.cof.ap_1
+  zp16$diff.l.ml <- zp16$lage.cof.ml_6 - zp16$lage.cof.ml_1
+  zp16$diff.auff.med <- zp16$auff.med_6 - zp16$auff.med_1
+  zp16$diff.auff.sag <- zp16$auff.sag_6 - zp16$auff.sag_1
+
+  zp16.l <- split(zp16,list(zp16$gruppe,zp16$huf))
+
+  cortests16 <- rbind(
+      Reduce(rbind,lapply(zp16.l, function(x) hf(x,"diff.l.ap","diff.l.ml"))),
+      Reduce(rbind,lapply(zp16.l, function(x) hf(x,"diff.l.ap","diff.auff.sag"))),
+      Reduce(rbind,lapply(zp16.l, function(x) hf(x,"diff.l.ap","diff.auff.med"))),
+      Reduce(rbind,lapply(zp16.l, function(x) hf(x,"diff.auff.sag","diff.auff.med"))),
+      Reduce(rbind,lapply(zp16.l, function(x) hf(x,"diff.l.ml","diff.auff.sag"))),
+      Reduce(rbind,lapply(zp16.l, function(x) hf(x,"diff.l.ml","diff.auff.med")))
+  )
+
+
+  cortests16$adj.p <- p.adjust(cortests16$pval,method = "fdr")
+  cortests16$pval <- NULL
+
+
+  hf2 <- function(x){
+      d1 <- as.data.frame(table(x$auffussen_1.nach))
+      d2 <- as.data.frame(table(x$auffussen_1.vor))
+      tab <- as.numeric(as.matrix(merge(d1,d2,by = "Var1", all = T))[,2:3])
+      tab[is.na(tab)] <- 0
+      tab <- matrix(tab,ncol = 2)
+      temp <- fisher.test(tab)
+      print(tab)
+      temp$p.value
+  }
+
+  lapply(zp1.l,hf2)
+
+
+  hf2 <- function(x){
+      d1 <- as.data.frame(table(x$auffussen_6))
+      d2 <- as.data.frame(table(x$auffussen_1))
+      tab <- as.numeric(as.matrix(merge(d1,d2,by = "Var1", all = T))[,2:3])
+      tab[is.na(tab)] <- 0
+      tab <- matrix(tab,ncol = 2)
+      temp <- fisher.test(tab)
+      print(tab)
+      temp$p.value
+  }
+
+  lapply(zp16.l,hf2)
+
+  zp12 <- x[,c("gruppe","tier","huf","bearbeitung",names(x)[grep("Auffussen.*_[12]|Lage.Cof.ap.*_[12]$|Lage.Cof.ml_[12]|auff.med_[12]|auff.sag_[21]",names(x),ignore.case = T)])]
+
+
+
+  zp12 <- reshape(zp12,
+                 idvar = c("gruppe","tier","huf"),
+                 timevar = "bearbeitung",
+                 direction = "wide")
+
+
+
+  zp12$diff.auff.med <- zp12$auff.med_2.vor - zp12$auff.med_1.nach
+  zp12$diff.auff.sag <- zp12$auff.sag_2.vor - zp12$auff.sag_1.nach
+
+  zp12.l <- split(zp12,list(zp12$gruppe,zp12$huf))
+
+  hf2 <- function(x){
+      d1 <- as.data.frame(table(x$auffussen_2.vor))
+      d2 <- as.data.frame(table(x$auffussen_1.nach))
+      tab <- as.numeric(as.matrix(merge(d1,d2,by = "Var1", all = T))[,2:3])
+      tab[is.na(tab)] <- 0
+      tab <- matrix(tab,ncol = 2)
+      temp <- fisher.test(tab)
+      print(tab)
+      temp$p.value
+  }
+
+  lapply(zp12.l,hf2)
+
+
+
+  cortests12 <- rbind(
+      Reduce(rbind,lapply(zp12.l, function(x) hf(x,"diff.auff.sag","diff.auff.med")))
+  )
+
+  cortests12$adj.p <- p.adjust(cortests12$pval,method = "fdr")
+  cortests12$pval <- NULL
+
+
+  ## require(openxlsx)
+  ## wb <- createWorkbook()
+  ## addWorksheet(wb,"cortests")
+  ## writeData(wb,"cortests",cortests)
+  ## saveWorkbook(wb, file = "201511corrtests.xlsx")
+
+  lapply(zp1.l,function(x) cor.test(x$diff.l.ap,x$diff.l.ml))
+
+  m.m <- manova(cbind(zp1$diff.l.ap,zp1$diff.l.ml) ~ zp1$gruppe)
+
+  m.m <- lm(cbind(diff.l.ap,diff.l.ml,diff.auff.med,diff.auff.sag) ~ gruppe + huf, data = zp1)
+  Manova(m.m, type = "III")
+
+  summary(m.m, multivariate = T)
+
+  require(heplots)
+  etasq(Anova(m.m), anova = T)
+
+  Anova(m.m, var = c(1,3))
+
+  require(heplots)
+  heplot(m.m,size = "effect")
+
+
+
+
+
+
+  m1 <- aov(diff.L.ap ~ Gruppe, data = zp1)
+
+  TukeyHSD(m1)
+
+
+  zp12 <- x[,c("gruppe","tier","huf","bearbeitung",names(x)[grep("Auffussen.*_[12]|Lage.Cof.ap.*_[12]|Lage.Cof.ml_[12]|auff.med_[12]|auff.sag_[21]",names(x),ignore.case = T)])]
+
+
+  zp12 <- reshape(zp12,
+                 idvar = c("gruppe","tier","huf"),
+                 timevar = "bearbeitung",
+                 direction = "wide")
+
+
+  zp12$diff.l.ap <- zp12$lage.cof.ap_2.vor - zp12$lage.cof.ap_1.nach
+  zp12$diff.l.ml <- zp12$lage.cof.ml_2.vor - zp12$lage.cof.ml_1.nach
+  zp12$diff.auff.med <- zp12$auff.med_2.vor - zp12$auff.med_1.nach
+  zp12$diff.auff.sag <- zp12$auff.sag_2.vor - zp12$auff.sag_1.nach
+
+
+
+
+  t.test(zp1$Lage.Cof.ap_1.nach[zp1$Gruppe=="C"],zp1$Lage.Cof.ap_1.vor[zp1$Gruppe=="C"])
+
+  t.test(zp1$Lage.Cof.ml_1.nach[zp1$Gruppe=="B"],zp1$Lage.Cof.ml_1.vor[zp1$Gruppe=="B"])
+
+  t.test(zp1$Lage.Cof.ml_1.nach[zp1$Gruppe=="C"],zp1$Lage.Cof.ml_1.vor[zp1$Gruppe=="C"])
+
+  TukeyHSD(aov(Lage.Cof.ap_1.vor ~ Gruppe, data = zp1))
+
+  m2 <- aov( ~ Gruppe + , data = zp1)
+
+  TukeyHSD(m2)
+
+
 #+END_SRC
+
+
+** kommentar
+Kommentar des Reviewers zur Durchführung der Statistik: At the moment the stats are basic and descriptive, and do not include any assessment of interactions among the 3 variables.  All of these data could be analysed more rigorously using a MANOVA. 
+
+http://userwww.sfsu.edu/efc/classes/biol710/manova/MANOVAnewest.pdf
+
+The picture emerging from BO (suppl 3) might even be clearer with a stronger analytical tool.
+
+MANOVA did not find any differences not already detected using uni variate analyses. Additional test of a correlations between the changes of variables confirmed the independence of change rates between variables. This holds for every comparison for each group for all timepoints.
+
+Because of the proportion of grouping factors and sample size no statistically significant change in the proportion of IC for any of the comparisons could be found. Fishers exact test was used for testing.
+
+
+* [2015-11-11 Mi] Graphiken neu
+ - Hätte fast vergessen dir die Legende zu der Nummerierung in den Abb zu schicken. Also: Figure 1: Parameters of interest. Left: IC (1-lateral toe, 2-medial toe, 3-central toe, 4-medial side, 5-lateral side, 6-flat, 7-lateral heel, 8-heels, 9–medial heel)
+
+Liebe Jenny, 
+im Anhang die Graphiken mit den labels.
+Zusammengefasst hab ich nur die zum ZP1, weil ich dafuer die Daten in der richtigen Struktur hatte. Ich weiss auch nicht, ob man das so ueberhaupt lesen kann.
+
+Ich hab alle Sachen getestet: Manovas, post hoch auf correlation zwischen den Aenderungen und die Zusammensetzung. Nach Korrektur der p-Werte war kein einziger Test signifikant. Hier der kurze Text, den ich geschrieben habe:
+
+MANOVA did not find any differences not already detected using uni variate analyses. Additional test of a correlations between the changes of variables confirmed the independence of change rates between variables. This holds for every comparison for each group for all timepoints.
+
+Because of the proportion of grouping factors and sample size no statistically significant change in the proportion of IC for any of the comparisons could be found. Fishers exact test was used for testing.
+
+Viele Gruesse und bis dann
+Mandy
